@@ -92,7 +92,7 @@ app.use('/student', express.static(path.join(__dirname, 'server/public/student')
 app.use(express.static(path.join(__dirname, 'server/public')));
 
 // DB initialization (PostgreSQL)
-const { sequelize, User, Student, GuestSlot, Op, decrypt, decryptDeterministic } = require('./server/db-postgres');
+const { sequelize, User, Student, GuestSlot, Op, decrypt, decryptDeterministic, encrypt, encryptDeterministic } = require('./server/db-postgres');
 
 // テスト用グローバル設定
 let isFixedOtpMode = false;
