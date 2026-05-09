@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rikasai-v1';
+const CACHE_NAME = 'rikasai-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/student/index.html',
@@ -33,23 +33,43 @@ self.addEventListener('activate', (event) => {
 
 // フェッチ要求の処理
 self.addEventListener('fetch', (event) => {
-  // APIリクエストはキャッシュしない（常にネットワーク）
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url);
+
+  // 招待客用のチケットAPIはオフライン用にキャッシュを試みる
+  if (url.pathname.startsWith('/api/guest-entry/')) {
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        const resClone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, resClone);
+        });
+        return res;
+      }).catch(() => {
+        return caches.match(event.request, { ignoreSearch: true });
+      })
+    );
+    return;
+  }
+
+  // その他のAPIリクエストはキャッシュしない
+  if (url.pathname.startsWith('/api/')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(event.request, { ignoreSearch: true }).then((response) => {
       // キャッシュがあればそれを返し、なければネットワークから取得
       return response || fetch(event.request).then((fetchResponse) => {
         // 取得したファイルをキャッシュに追加（動的キャッシュ）
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        });
+        if (fetchResponse.status === 200) {
+          const resClone = fetchResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, resClone);
+          });
+        }
+        return fetchResponse;
       });
     }).catch(() => {
-      // オフラインでキャッシュもない場合のフォールバック（必要なら）
       if (event.request.mode === 'navigate') {
         return caches.match('/student/index.html');
       }
