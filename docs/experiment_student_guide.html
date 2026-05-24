@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>実証実験 生徒向け手順書</title>
+<style>
+  @page { size: A4; margin: 10mm 14mm 10mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #fff;
+    width: 100%;
+  }
+
+  /* HEADER */
+  .hdr { width:100%; border-bottom:3px solid #1a3a5c; margin-bottom:8px; padding-bottom:7px; }
+  .hdr td { vertical-align:top; }
+  .hdr .right { text-align:right; font-size:8.5pt; color:#666; line-height:1.8; white-space:nowrap; }
+  h1 { font-size:14pt; font-weight:bold; color:#1a3a5c; line-height:1.3; }
+  .sub { font-size:8.5pt; color:#555; margin-top:2px; }
+
+  /* NOTICE */
+  .notice { background:#fff8e1; border:1.5px solid #f0b800; border-radius:5px; padding:5px 10px; font-size:8.5pt; margin-bottom:8px; }
+
+  /* SECTION LABEL */
+  .sec-label { font-size:9pt; font-weight:bold; color:#1a3a5c; border-left:4px solid #1a3a5c; padding-left:7px; margin-bottom:6px; }
+
+  /* STEPS */
+  .steps { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:6px; table-layout:fixed; }
+  .steps td { vertical-align:top; width:50%; }
+  .card { border:1.5px solid #c0cfe0; border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .card-head { background:#1a3a5c; color:#fff; padding:5px 10px; }
+  .card-head table { width:100%; border-collapse:collapse; }
+  .card-head td { padding:0; vertical-align:middle; }
+  .num { background:#fff; color:#1a3a5c; font-weight:bold; font-size:11pt; width:24px; height:24px; border-radius:12px; text-align:center; line-height:24px; }
+  .card-title { font-size:9.5pt; font-weight:bold; padding-left:7px !important; }
+  .card-body { padding:7px 10px; font-size:8.5pt; background:#f7fafd; min-height:70px; }
+  .card-body p { margin-bottom:3px; }
+  .url-box { background:#e8f0f7; border:1px solid #b0c4d8; border-radius:3px; padding:3px 8px; font-size:8pt; color:#1a3a5c; font-weight:bold; margin:4px 0; }
+  .hint { font-size:7.5pt; color:#666; margin-top:2px; }
+  .em { background:#fff3cd; padding:1px 5px; border-radius:3px; font-weight:bold; color:#7a5000; }
+  .full-body { display:table; width:100%; }
+  .full-body .col { display:table-cell; vertical-align:top; width:50%; }
+  .full-body .col+.col { padding-left:14px; }
+
+  /* DAY FLOW */
+  .day { background:#1a3a5c; color:#fff; border-radius:6px; padding:7px 12px; margin-bottom:8px; }
+  .day-title { font-size:10pt; font-weight:bold; margin-bottom:6px; }
+  .day-flow { width:100%; border-collapse:collapse; }
+  .day-flow td { vertical-align:middle; padding:0; }
+  .dbox { background:rgba(255,255,255,0.15); border:1.5px solid rgba(255,255,255,0.4); border-radius:5px; padding:4px 6px; text-align:center; font-size:8pt; }
+  .dbox.ok { background:rgba(80,200,120,0.25); border-color:rgba(80,200,120,0.6); }
+  .dbox.ng { background:rgba(220,80,80,0.2); border-color:rgba(220,80,80,0.5); }
+  .dbox .dn { font-size:7pt; opacity:0.75; margin-bottom:1px; }
+  .dbox .dt { font-weight:bold; font-size:8.5pt; line-height:1.3; }
+  .dbox .ds { font-size:7pt; opacity:0.8; margin-top:1px; }
+  .arr { text-align:center; font-size:12pt; opacity:0.5; width:18px; white-space:nowrap; }
+
+  /* BOTTOM BOXES */
+  .bottom-row { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:7px; table-layout:fixed; }
+  .bottom-row td { vertical-align:top; width:50%; }
+
+  /* QR BOX */
+  .qr-box { border:1.5px solid #d4a0c0; border-radius:6px; overflow:hidden; height:100%; }
+  .qr-box.green { border-color:#90c090; }
+  .qr-head { padding:5px 10px; font-weight:bold; font-size:8.5pt; }
+  .qr-head.pink { background:#fdf2f8; color:#7a2050; }
+  .qr-head.green { background:#f0f7f0; color:#2a6a2a; }
+  .qr-inner { width:100%; border-collapse:collapse; }
+  .qr-inner td { vertical-align:middle; padding:6px 10px; font-size:8pt; }
+  .qr-inner .qr-img { width:72px; text-align:center; padding-right:4px; }
+
+  /* TROUBLE */
+  .trouble { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:7px; table-layout:fixed; }
+  .trouble td { vertical-align:top; width:50%; }
+  .tbox { border:1px solid #d0d8e4; border-radius:5px; overflow:hidden; font-size:8.5pt; }
+  .thead { background:#e8f0f7; color:#1a3a5c; font-weight:bold; padding:4px 9px; font-size:8.5pt; }
+  .tbody { padding:5px 9px; line-height:1.5; }
+
+  /* FOOTER */
+  .footer { border-top:1px solid #ccc; padding-top:5px; width:100%; font-size:7.5pt; color:#888; }
+  .footer td:last-child { text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="hdr">
+  <tr>
+    <td><h1>実証実験　生徒向け操作手順</h1><div class="sub">入場管理システム　QRコードチェックイン　実証実験（テスト）</div></td>
+    <td class="right">千葉英和高校　生徒会<br>令和8年　　月　　日</td>
+  </tr>
+</table>
+
+<div class="notice">📱 この実験では<strong>学校のメールアドレス</strong>と<strong>スマートフォン</strong>を使います。事前にメールが受信できる状態にしておいてください。</div>
+
+<div class="sec-label">事前準備（実験当日の朝までに済ませてください）</div>
+
+<!-- STEPS -->
+<table class="steps">
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-head"><table><tr><td width="24"><div class="num">1</div></td><td class="card-title">システムページを開く</td></tr></table></div>
+        <div class="card-body">
+          <p>スマートフォンのブラウザで以下のURLにアクセスします：</p>
+          <div class="url-box">rikasai-reservation.vercel.app/student</div>
+          <p class="hint">※ Safari・Chromeどちらでも動作します</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-head"><table><tr><td width="24"><div class="num">2</div></td><td class="card-title">認証コードを受け取る</td></tr></table></div>
+        <div class="card-body">
+          <p>「新規登録」タブを選び、学校メールアドレス・氏名・クラスを入力して</p>
+          <p><span class="em">「認証コードを送信」</span>をタップします。</p>
+          <p class="hint">※ Gmailに6桁の数字が届きます（数分かかる場合あり）</p>
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-head"><table><tr><td width="24"><div class="num">3</div></td><td class="card-title">ログインする</td></tr></table></div>
+        <div class="card-body">
+          <p>Gmailアプリを開いてコードを確認し、6桁の認証コードを入力して</p>
+          <p><span class="em">「ログイン」</span>をタップします。</p>
+          <p class="hint">※ 2回目以降は「ログイン」タブからできます</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-head"><table><tr><td width="24"><div class="num">4</div></td><td class="card-title">招待リンクを生成する</td></tr></table></div>
+        <div class="card-body">
+          <p>ダッシュボードの「ゲストの名称を入力」欄に</p>
+          <p><span class="em">自分の名前</span>を入力して</p>
+          <p><span class="em">「招待リンクを生成」</span>をタップします。</p>
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="card">
+        <div class="card-head"><table><tr><td width="24"><div class="num">5</div></td><td class="card-title">QRコードをスクリーンショットで保存する</td></tr></table></div>
+        <div class="card-body">
+          <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="vertical-align:top;width:50%;padding:0;">
+              <p>生成されたリンクを開くと<strong>QRコード</strong>が表示されます。</p>
+              <p>そのままスクリーンショットを撮って保存してください。</p>
+            </td>
+            <td style="vertical-align:top;width:50%;padding-left:14px;">
+              <p class="hint">※ 実験当日まで消さないでください</p>
+              <p class="hint">※ 保存し忘れた場合は当日もう一度ログインしてSTEP 4→5をやり直せばOKです</p>
+            </td>
+          </tr></table>
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- DAY FLOW -->
+<div class="day">
+  <div class="day-title">🏫 実験当日（登校時）の流れ</div>
+  <table class="day-flow">
+    <tr>
+      <td><div class="dbox"><div class="dn">① 到着</div><div class="dt">昇降口で<br>スマホ準備</div></div></td>
+      <td class="arr">→</td>
+      <td><div class="dbox"><div class="dn">② かざす</div><div class="dt">QRを端末に<br>かざす</div></div></td>
+      <td class="arr">→</td>
+      <td><div class="dbox ok"><div class="dn">③ 成功 ✓</div><div class="dt">ピッと音が<br>なったらOK！</div><div class="ds">そのまま登校</div></div></td>
+      <td class="arr">→</td>
+      <td><div class="dbox ng"><div class="dn">✕ エラー</div><div class="dt">バツが出たら<br>もう一度かざす</div><div class="ds">2回失敗→下記フォームへ</div></div></td>
+    </tr>
+  </table>
+</div>
+
+<!-- BOTTOM: QR BOXES -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
+  <tr>
+    <td style="width:50%;padding-right:4px;vertical-align:middle;background:#fdf2f8;border:1.5px solid #d4a0c0;border-radius:5px;">
+      <table style="width:100%;border-collapse:collapse;"><tr>
+        <td style="width:36px;padding:5px 4px 5px 8px;vertical-align:middle;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEIAQAAAACLjVdSAAABlklEQVR4nO2ZsW7EMAxD+Q75/19mB8pO0OWm6oT6kiVwOBCCJFIy1pvn9Q7wRfxjxCWRLwsLY0n4Pp3CtC0esiQhVOFIKOp0DNNGBKAkCBaqkOR0FtNmBEa7VD7I43OI6/4kJfJoHo08piAuqVqFjLDRiow7eUxByMuA+Ne7fk9h2oPg4cdITqS3NvMYhKBeSUaS7aW1dPIYgeDOiPTREltT/mwM005/agnHf0RyJZFsGcO0FRETZoywyp6lrQ5j+veIyAlgSleiuuZUv578MCbuQ88ZZhjTBoSRYE103pVyor68JIgbtRSlTWAiwKOYtiGQ7yAsBc6PYUwbENU9kyAJSI0vnNc/WD6s5vzlP5YzO82PsdKgQlO6Ur6M4/pH7UyXvMahPjeGY5i2+fU13qd07liQopnCtHN+kbII8b0c29UzhWlbPPSY7r2vHGLcT9TbtUmvVXKCAZzaP9bjXSPYex00hmk7ghrrvMw6Ps+PvaQ1tmS+fzj26M0opn+OuLQFZm/GHtcvx+0Ln/v1T/L4ImYifgBiTrISgdCinQAAAABJRU5ErkJggg==" width="32" height="32" alt="エラー報告QR"></td>
+        <td style="padding:5px 8px 5px 4px;font-size:7.5pt;line-height:1.4;vertical-align:middle;color:#7a2050;"><strong>📋 エラー報告</strong><br>困ったらすぐスキャンして送信</td>
+      </tr></table>
+    </td>
+    <td style="width:8px;"></td>
+    <td style="width:50%;padding-left:4px;vertical-align:middle;background:#f0f7f0;border:1.5px solid #90c090;border-radius:5px;">
+      <table style="width:100%;border-collapse:collapse;"><tr>
+        <td style="width:36px;padding:5px 4px 5px 8px;vertical-align:middle;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQ4AAAEOAQAAAABQysQIAAACpElEQVR4nO2aTYobQQyFv0o1eFmGHCBHkW8wZ8qRcoCADHOdgHo5IPOyUNlJyGIc8ueCKYzbYC0kJD29p+omXjmXd69ZwJvJ3zXZW2tt20/ApZ2Ay/EM53aktdba6cHcvcfEJAHs7RDny5FDwH5iP3VJ8XDuvnY2oGEA2OeNjZYNsOdk24/9y2O5+wsmw9uHjxuW2CFIzi/t9L98+T2TbT73J3EGDjobukDX9b9HcvcOExQmqUs5xJCkHN7lCuuSwvKR3L0vIoAe9vMHgAUjup7EElNYDyQVBkpaL6KwBLAe9CCHKjs5XGFr5sh7WH4LAYYzxHCwXDGiYGJCVJk5WA5J3gsxHsndeyMCBT2svhnKStDwJftIPtF7huAKFCisErdeRNVEACQGxvDEGN7DciyYoyjnAetSQg8YnlQdLpgjSUEOv80jMIVVf/UVIwqTHOgTHIzhimtPrYkMNVhzqMsZXhjeCx9WjChgqMtzSMGcqkM5tGrVTdye3LvIQ2LFJZaMaHJsfqCpw4vpLciCNiA3tB+7aNjLe2/Q4wy8bNa13Har2r8AwYskADlUqL4mr6sxhOQJXWKoX8nekpxBPtlC0R7su1HLovpo0u+as1IOZ+o+W7Lq5OV8cW8Kz4eASR4eyd17q64AYfhtI1QTCtZEBgmsdOs3NVHEdVHFN/dyJZGsiGsO1e8lsS5Q0Kd0tclaKaxYVMOWvitYsBsFmjJ2yaoDYEwFUUqcycNhxaqrE1Yb7+I/t55atI+o3QLWr2K8cK+vqvhMUo/J6GoYST5XDUvmyG5L7x7c8KH2XYvmqCKqVWpthm+kaE30LkbqdSsx7yaG91W3Wxugeuynl/efNk6Jsz8lfoin53/pyx/GOqsblro8Uswl5IJ91N7eonl4k696tqqSNPT7/gAAAABJRU5ErkJggg==" width="32" height="32" alt="アンケートQR"></td>
+        <td style="padding:5px 8px 5px 4px;font-size:7.5pt;line-height:1.4;vertical-align:middle;color:#2a6a2a;"><strong>📝 アンケート</strong><br>実験後HRでスキャンして回答</td>
+      </tr></table>
+    </td>
+  </tr>
+</table>
+
+<!-- FOOTER -->
+<table class="footer">
+  <tr>
+    <td>実証実験　生徒向け操作手順　（入場管理システム）</td>
+    <td>千葉英和高校　生徒会</td>
+  </tr>
+</table>
+
+</body>
+</html>
