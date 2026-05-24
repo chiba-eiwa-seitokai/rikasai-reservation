@@ -182,35 +182,25 @@
   </table>
 </div>
 
-<!-- BOTTOM: QR BOXES + TROUBLE -->
-<table class="bottom-row">
+<!-- BOTTOM: QR BOXES -->
+<table style="width:100%;border-collapse:separate;border-spacing:6px 0;margin-bottom:7px;table-layout:fixed;">
   <tr>
-    <!-- LEFT: error report + survey QR -->
-    <td style="vertical-align:top;">
-      <div class="qr-box" style="margin-bottom:6px;">
+    <td style="vertical-align:top;width:50%;">
+      <div class="qr-box">
         <div class="qr-head pink">📋 エラー報告フォーム（困ったらすぐ送信）</div>
         <table class="qr-inner"><tr>
-          <td class="qr-img"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEIAQAAAACLjVdSAAABlklEQVR4nO2ZsW7EMAxD+Q75/19mB8pO0OWm6oT6kiVwOBCCJFIy1pvn9Q7wRfxjxCWRLwsLY0n4Pp3CtC0esiQhVOFIKOp0DNNGBKAkCBaqkOR0FtNmBEa7VD7I43OI6/4kJfJoHo08piAuqVqFjLDRiow7eUxByMuA+Ne7fk9h2oPg4cdITqS3NvMYhKBeSUaS7aW1dPIYgeDOiPTREltT/mwM005/agnHf0RyJZFsGcO0FRETZoywyp6lrQ5j+veIyAlgSleiuuZUv578MCbuQ88ZZhjTBoSRYE103pVyor68JIgbtRSlTWAiwKOYtiGQ7yAsBc6PYUwbENU9kyAJSI0vnNc/WD6s5vzlP5YzO82PsdKgQlO6Ur6M4/pH7UyXvMahPjeGY5i2+fU13qd07liQopnCtHN+kbII8b0c29UzhWlbPPSY7r2vHGLcT9TbtUmvVXKCAZzaP9bjXSPYex00hmk7ghrrvMw6Ps+PvaQ1tmS+fzj26M0opn+OuLQFZm/GHtcvx+0Ln/v1T/L4ImYifgBiTrISgdCinQAAAABJRU5ErkJggg==" width="64" height="64" alt="エラー報告QR"></td>
+          <td class="qr-img"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEIAQAAAACLjVdSAAABlklEQVR4nO2ZsW7EMAxD+Q75/19mB8pO0OWm6oT6kiVwOBCCJFIy1pvn9Q7wRfxjxCWRLwsLY0n4Pp3CtC0esiQhVOFIKOp0DNNGBKAkCBaqkOR0FtNmBEa7VD7I43OI6/4kJfJoHo08piAuqVqFjLDRiow7eUxByMuA+Ne7fk9h2oPg4cdITqS3NvMYhKBeSUaS7aW1dPIYgeDOiPTREltT/mwM005/agnHf0RyJZFsGcO0FRETZoywyp6lrQ5j+veIyAlgSleiuuZUv578MCbuQ88ZZhjTBoSRYE103pVyor68JIgbtRSlTWAiwKOYtiGQ7yAsBc6PYUwbENU9kyAJSI0vnNc/WD6s5vzlP5YzO82PsdKgQlO6Ur6M4/pH7UyXvMahPjeGY5i2+fU13qd07liQopnCtHN+kbII8b0c29UzhWlbPPSY7r2vHGLcT9TbtUmvVXKCAZzaP9bjXSPYex00hmk7ghrrvMw6Ps+PvaQ1tmS+fzj26M0opn+OuLQFZm/GHtcvx+0Ln/v1T/L4ImYifgBiTrISgdCinQAAAABJRU5ErkJggg==" width="44" height="44" alt="エラー報告QR"></td>
           <td style="font-size:8pt;line-height:1.5;">名前・エラー内容・時刻を送信すると担当者に通知が届きます。</td>
         </tr></table>
       </div>
+    </td>
+    <td style="vertical-align:top;width:50%;">
       <div class="qr-box green">
         <div class="qr-head green">📝 アンケート（実験後HRで回答をお願いします）</div>
         <table class="qr-inner"><tr>
-          <td class="qr-img"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQ4AAAEOAQAAAABQysQIAAACpElEQVR4nO2aTYobQQyFv0o1eFmGHCBHkW8wZ8qRcoCADHOdgHo5IPOyUNlJyGIc8ueCKYzbYC0kJD29p+omXjmXd69ZwJvJ3zXZW2tt20/ApZ2Ay/EM53aktdba6cHcvcfEJAHs7RDny5FDwH5iP3VJ8XDuvnY2oGEA2OeNjZYNsOdk24/9y2O5+wsmw9uHjxuW2CFIzi/t9L98+T2TbT73J3EGDjobukDX9b9HcvcOExQmqUs5xJCkHN7lCuuSwvKR3L0vIoAe9vMHgAUjup7EElNYDyQVBkpaL6KwBLAe9CCHKjs5XGFr5sh7WH4LAYYzxHCwXDGiYGJCVJk5WA5J3gsxHsndeyMCBT2svhnKStDwJftIPtF7huAKFCisErdeRNVEACQGxvDEGN7DciyYoyjnAetSQg8YnlQdLpgjSUEOv80jMIVVf/UVIwqTHOgTHIzhimtPrYkMNVhzqMsZXhjeCx9WjChgqMtzSMGcqkM5tGrVTdye3LvIQ2LFJZaMaHJsfqCpw4vpLciCNiA3tB+7aNjLe2/Q4wy8bNa13Har2r8AwYskADlUqL4mr6sxhOQJXWKoX8nekpxBPtlC0R7su1HLovpo0u+as1IOZ+o+W7Lq5OV8cW8Kz4eASR4eyd17q64AYfhtI1QTCtZEBgmsdOs3NVHEdVHFN/dyJZGsiGsO1e8lsS5Q0Kd0tclaKaxYVMOWvitYsBsFmjJ2yaoDYEwFUUqcycNhxaqrE1Yb7+I/t55atI+o3QLWr2K8cK+vqvhMUo/J6GoYST5XDUvmyG5L7x7c8KH2XYvmqCKqVWpthm+kaE30LkbqdSsx7yaG91W3Wxugeuynl/efNk6Jsz8lfoin53/pyx/GOqsblro8Uswl5IJ91N7eonl4k696tqqSNPT7/gAAAABJRU5ErkJggg==" width="64" height="64" alt="アンケートQR"></td>
+          <td class="qr-img"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQ4AAAEOAQAAAABQysQIAAACpElEQVR4nO2aTYobQQyFv0o1eFmGHCBHkW8wZ8qRcoCADHOdgHo5IPOyUNlJyGIc8ueCKYzbYC0kJD29p+omXjmXd69ZwJvJ3zXZW2tt20/ApZ2Ay/EM53aktdba6cHcvcfEJAHs7RDny5FDwH5iP3VJ8XDuvnY2oGEA2OeNjZYNsOdk24/9y2O5+wsmw9uHjxuW2CFIzi/t9L98+T2TbT73J3EGDjobukDX9b9HcvcOExQmqUs5xJCkHN7lCuuSwvKR3L0vIoAe9vMHgAUjup7EElNYDyQVBkpaL6KwBLAe9CCHKjs5XGFr5sh7WH4LAYYzxHCwXDGiYGJCVJk5WA5J3gsxHsndeyMCBT2svhnKStDwJftIPtF7huAKFCisErdeRNVEACQGxvDEGN7DciyYoyjnAetSQg8YnlQdLpgjSUEOv80jMIVVf/UVIwqTHOgTHIzhimtPrYkMNVhzqMsZXhjeCx9WjChgqMtzSMGcqkM5tGrVTdye3LvIQ2LFJZaMaHJsfqCpw4vpLciCNiA3tB+7aNjLe2/Q4wy8bNa13Har2r8AwYskADlUqL4mr6sxhOQJXWKoX8nekpxBPtlC0R7su1HLovpo0u+as1IOZ+o+W7Lq5OV8cW8Kz4eASR4eyd17q64AYfhtI1QTCtZEBgmsdOs3NVHEdVHFN/dyJZGsiGsO1e8lsS5Q0Kd0tclaKaxYVMOWvitYsBsFmjJ2yaoDYEwFUUqcycNhxaqrE1Yb7+I/t55atI+o3QLWr2K8cK+vqvhMUo/J6GoYST5XDUvmyG5L7x7c8KH2XYvmqCKqVWpthm+kaE30LkbqdSsx7yaG91W3Wxugeuynl/efNk6Jsz8lfoin53/pyx/GOqsblro8Uswl5IJ91N7eonl4k696tqqSNPT7/gAAAABJRU5ErkJggg==" width="44" height="44" alt="アンケートQR"></td>
           <td style="font-size:8pt;line-height:1.5;">実験の感想・改善点をお聞かせください。所要時間約2〜3分です。</td>
         </tr></table>
-      </div>
-    </td>
-    <!-- RIGHT: trouble -->
-    <td style="vertical-align:top;">
-      <div class="tbox" style="margin-bottom:6px;">
-        <div class="thead">❓ メールが届かない場合</div>
-        <div class="tbody">迷惑メールフォルダを確認してください。それでも届かない場合は<strong>エラー報告フォームから報告</strong>してください。</div>
-      </div>
-      <div class="tbox">
-        <div class="thead">❓ QRを保存し忘れた場合</div>
-        <div class="tbody">当日もう一度ログインしてSTEP 4→5をやり直せばQRを再表示できます。それでも無理なら<strong>エラー報告フォームから報告</strong>してください。</div>
       </div>
     </td>
   </tr>
