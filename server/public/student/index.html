@@ -153,19 +153,24 @@
         }
 
         .modal-container {
-            max-width: 90%;
-            max-height: 80vh;
+            max-width: 92%;
+            max-height: 92vh;
+            width: 420px;
             position: relative;
             background: #fff;
             border-radius: var(--radius-md);
-            overflow: hidden;
+            overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
         }
 
         .modal-image {
             display: block;
-            max-width: 100%;
+            width: 100%;
             height: auto;
+            max-height: 70vh;
+            object-fit: contain;
         }
 
         .modal-footer {
@@ -661,9 +666,8 @@
 
         // ===== コピー =====
         async function copyLink(url, idx, guestName) {
-            const textToCopy = createMessage(url, guestName);
             try {
-                await navigator.clipboard.writeText(textToCopy);
+                await navigator.clipboard.writeText(url);
                 const btn = document.getElementById(`copy-btn-${idx}`);
                 if (btn) {
                     btn.textContent = 'コピー済み！';
@@ -671,7 +675,7 @@
                     setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 2000);
                 }
             } catch (e) {
-                prompt('以下のテキストをコピーしてください:', textToCopy);
+                prompt('以下のURLをコピーしてください:', url);
             }
         }
 
