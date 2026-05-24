@@ -532,6 +532,9 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         const student = await Student.findOne({ where: { id: req.params.id } });
         if (!student) return res.status(404).json({ message: '生徒が見つかりません。' });
@@ -543,7 +546,7 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
             token,
             student_email: student.email,
             student_name: student.name,
-            guest_name: guest_name.trim(), // assuming sanitization is done elsewhere or we don't strictly require escapeHtml since it's admin
+            guest_name: escapeHtml(guest_name.trim()),
             used: false
         });
 
@@ -558,11 +561,14 @@ app.put('/api/admin/guest-slots/:id', authenticateToken, authorizeRole(['admin']
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         const slot = await GuestSlot.findOne({ where: { id: req.params.id } });
         if (!slot) return res.status(404).json({ message: '指定された招待枠が見つかりません。' });
 
-        await GuestSlot.update({ guest_name: guest_name.trim() }, { where: { id: req.params.id } });
+        await GuestSlot.update({ guest_name: escapeHtml(guest_name.trim()) }, { where: { id: req.params.id } });
         res.json({ message: 'ゲスト名を更新しました。' });
     } catch (error) { next(error); }
 });
@@ -1013,7 +1019,7 @@ app.put('/api/student/message-template', authenticateStudent, [
 
 // 招待リンク生成（ゲスト名を生徒が入力）
 app.post('/api/student/generate-links', authenticateStudent, [
-    body('guest_name').isString().trim().notEmpty().withMessage('ゲストの名前は必須です')
+    body('guest_name').isString().trim().notEmpty().withMessage('ゲストの名前は必須です').isLength({ max: 50 }).withMessage('ゲストの名前は50文字以内で入力してください')
 ], async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -1065,6 +1071,9 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
 
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
+        }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
         }
 
         // 当日判定 (環境変数でカンマ区切りの日付指定を対応)
