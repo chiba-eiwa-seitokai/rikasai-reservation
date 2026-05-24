@@ -3,11 +3,16 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- System designed and developed by 越川颯人 (千葉英和高校生徒会) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>梨花祭2026 入場QR</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="manifest" href="/manifest.json">
     <script>
+        // ===
+        console.log('%c梨花祭2026 入場管理システム', 'font-size:16px;font-weight:bold;color:#c0392b;');
+        console.log('%c Designed & Developed by 越川颯人 / 千葉英和高校生徒会 (2026)', 'color:#555;');
+        // ===
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').then(reg => {
@@ -65,7 +70,7 @@
             </div>
             <div style="margin-top: 1.5rem;">
                 <p style="font-size: var(--font-size-sm); color: var(--color-text-sub);">
-                    開催日時：2025年6月◯日（土）9:00〜14:00<br>
+                    開催日時：2026年6月◯日（土）9:00〜14:00<br>
                     千葉英和高等学校
                 </p>
             </div>
@@ -179,7 +184,7 @@
                 // テキスト
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#1e1b4b'; ctx.font = 'bold 54px sans-serif';
-                ctx.fillText('梨花祭 2025', 400, cardY + 110);
+                ctx.fillText('梨花祭 2026', 400, cardY + 110);
                 
                 ctx.fillStyle = '#6366f1'; ctx.font = 'bold 28px sans-serif';
                 ctx.fillText('SPECIAL GUEST TICKET', 400, cardY + 165);
@@ -203,7 +208,7 @@
                 ctx.fillStyle = '#4b5563'; ctx.font = 'bold 26px sans-serif';
                 ctx.fillText('当日はこのQRコードをご提示ください', 400, cardY + 740);
                 ctx.font = '24px sans-serif';
-                ctx.fillText('開催日: 2025年6月◯日（土）9:00〜14:00', 400, cardY + 810);
+                ctx.fillText('開催日: 2026年6月◯日（土）9:00〜14:00', 400, cardY + 810);
                 ctx.fillText('場所: 千葉英和高等学校', 400, cardY + 860);
 
                 // ダウンロード実行
@@ -232,7 +237,7 @@
     </script>
 
     <footer style="text-align: center; margin-top: 2rem; padding: 1rem;">
-        <p style="color: var(--color-text-sub); font-size: 12px; margin-top: 0.5rem;">&copy; 2025 千葉英和高校梨花祭運営委員</p>
+        <p style="color: var(--color-text-sub); font-size: 12px; margin-top: 0.5rem;">&copy; 2026 千葉英和高校生徒会</p>
     </footer>
 </body>
 

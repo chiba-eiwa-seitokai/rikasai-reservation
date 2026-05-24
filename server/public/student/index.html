@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- System designed and developed by 越川颯人 (千葉英和高校生徒会) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>梨花祭2026 生徒ダッシュボード</title>
     <link rel="stylesheet" href="/css/style.css">
@@ -10,6 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <script>
+        // ===
+        console.log('%c梨花祭2026 入場管理システム', 'font-size:16px;font-weight:bold;color:#c0392b;');
+        console.log('%c Designed & Developed by 越川颯人 / 千葉英和高校生徒会 (2026)', 'color:#555;');
+        // ===
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').then(reg => {
@@ -753,10 +758,10 @@
                 // --- テキスト描画 ---
                 ctx.textAlign = 'center';
 
-                // ヘッダー: 梨花祭 2025
+                // ヘッダー: 梨花祭 2026
                 ctx.fillStyle = '#1e1b4b';
                 ctx.font = 'bold 54px "Noto Sans JP", sans-serif';
-                ctx.fillText('梨花祭 2025', 400, cardY + 110);
+                ctx.fillText('梨花祭 2026', 400, cardY + 110);
 
                 // サブタイトル
                 ctx.font = 'bold 28px "Inter", sans-serif';
@@ -790,7 +795,7 @@
                 ctx.fillText('当日はこのQRコードをご提示ください', 400, cardY + 740);
 
                 ctx.font = '24px "Noto Sans JP", sans-serif';
-                ctx.fillText('開催日: 2025年6月◯日（土）9:00〜14:00', 400, cardY + 810);
+                ctx.fillText('開催日: 2026年6月◯日（土）9:00〜14:00', 400, cardY + 810);
                 ctx.fillText('場所: 千葉英和高等学校', 400, cardY + 860);
 
                 // 注意書き
@@ -874,7 +879,7 @@
     </script>
 
     <footer style="text-align: center; margin-top: 2rem; padding: 1rem;">
-        <p style="color: var(--color-text-sub); font-size: 12px;">&copy; 2026 千葉英和高校梨花祭運営委員</p>
+        <p style="color: var(--color-text-sub); font-size: 12px;">&copy; 2026 千葉英和高校生徒会</p>
     </footer>
 </body>
 

@@ -812,7 +812,7 @@ app.post('/api/student/login-otp', otpLimiter, [
         } else {
             const mailOptions = {
                 to: normalizedEmail,
-                subject: '梨花祭2025 ログイン認証コード',
+                subject: '梨花祭2026 ログイン認証コード',
                 html: `
                     <p>${escapeHtml(student.name)} さん</p>
                     <p>以下の認証コードを入力してください。</p>
@@ -873,7 +873,7 @@ app.post('/api/student/request-otp', otpLimiter, [
             // メール送信
             const mailOptions = {
                 to: normalizedEmail,
-                subject: '梨花祭2025 生徒認証コード',
+                subject: '梨花祭2026 生徒認証コード',
                 html: `
                     <p>${escapeHtml(name.trim())} さん</p>
                     <p>以下の認証コードを入力してください。</p>
@@ -1068,7 +1068,7 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
         }
 
         // 当日判定 (環境変数でカンマ区切りの日付指定を対応)
-        const festivalDatesStr = process.env.FESTIVAL_DATES || '2025-07-17,2025-07-18';
+        const festivalDatesStr = process.env.FESTIVAL_DATES || '2026-07-17,2026-07-18';
         const festivalDates = festivalDatesStr.split(',').map(d => d.trim());
         
         // 日本時間での今日の日付を取得(YYYY-MM-DD形式にするためフォーマット調整)
