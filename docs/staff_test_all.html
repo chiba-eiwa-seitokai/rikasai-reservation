@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>運営スタッフ向けテスト手順書（全員）</title>
+<style>
+  @page { size: A4; margin: 10mm 14mm 10mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #fff;
+    width: 100%;
+  }
+
+  /* HEADER */
+  .hdr { width:100%; border-bottom:3px solid #1a3a5c; margin-bottom:8px; padding-bottom:7px; }
+  .hdr td { vertical-align:top; }
+  .hdr .right { text-align:right; font-size:8.5pt; color:#666; line-height:1.8; white-space:nowrap; }
+  h1 { font-size:14pt; font-weight:bold; color:#1a3a5c; line-height:1.3; }
+  .sub { font-size:8.5pt; color:#555; margin-top:2px; }
+
+  /* BADGE */
+  .badge { display:inline-block; background:#1a3a5c; color:#fff; font-size:8pt; font-weight:bold; padding:2px 9px; border-radius:10px; margin-right:5px; }
+
+  /* NOTICE */
+  .notice { background:#fff8e1; border:1.5px solid #f0b800; border-radius:5px; padding:6px 10px; font-size:8.5pt; margin-bottom:8px; }
+
+  /* SECTION LABEL */
+  .sec-label { font-size:9pt; font-weight:bold; color:#1a3a5c; border-left:4px solid #1a3a5c; padding-left:7px; margin-bottom:6px; margin-top:10px; }
+
+  /* PHASE HEADER */
+  .phase-bar { background:#1a3a5c; color:#fff; border-radius:5px 5px 0 0; padding:5px 12px; font-size:9pt; font-weight:bold; }
+  .phase-wrap { border:1.5px solid #1a3a5c; border-radius:0 0 6px 6px; border-top:none; margin-bottom:8px; }
+
+  /* STEPS */
+  .steps { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:6px; table-layout:fixed; }
+  .steps td { vertical-align:top; width:50%; }
+  .card { border:1.5px solid #c0cfe0; border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .card-head { background:#1a3a5c; color:#fff; padding:5px 10px; }
+  .card-head table { width:100%; border-collapse:collapse; }
+  .card-head td { padding:0; vertical-align:middle; }
+  .num { background:#fff; color:#1a3a5c; font-weight:bold; font-size:11pt; width:24px; height:24px; border-radius:12px; text-align:center; line-height:24px; flex-shrink:0; }
+  .card-title { font-size:9.5pt; font-weight:bold; padding-left:7px !important; }
+  .card-body { padding:7px 10px; font-size:8.5pt; background:#f7fafd; min-height:65px; }
+  .card-body p { margin-bottom:3px; }
+  .url-box { background:#e8f0f7; border:1px solid #b0c4d8; border-radius:3px; padding:3px 8px; font-size:8pt; color:#1a3a5c; font-weight:bold; margin:4px 0; letter-spacing:0.02em; }
+  .hint { font-size:7.5pt; color:#666; margin-top:2px; }
+  .em { background:#fff3cd; padding:1px 5px; border-radius:3px; font-weight:bold; color:#7a5000; }
+
+  /* FLOW */
+  .flow-row { display:flex; align-items:center; gap:4px; padding:8px 12px; flex-wrap:nowrap; }
+  .fbox { flex:1; background:rgba(255,255,255,0.15); border:1.5px solid rgba(255,255,255,0.4); border-radius:5px; padding:5px 6px; text-align:center; font-size:7.5pt; color:#fff; min-width:0; }
+  .fbox .fn { font-size:6.5pt; opacity:0.75; margin-bottom:1px; }
+  .fbox .ft { font-weight:bold; font-size:8pt; line-height:1.3; }
+  .farr { color:rgba(255,255,255,0.6); font-size:12pt; white-space:nowrap; }
+
+  /* GROUP TABLE */
+  .gtbl { width:100%; border-collapse:collapse; margin-bottom:8px; font-size:8.5pt; }
+  .gtbl th { background:#2c5282; color:#fff; padding:5px 8px; text-align:left; font-weight:bold; }
+  .gtbl td { border:1px solid #c0cfe0; padding:5px 8px; vertical-align:top; }
+  .gtbl tr:nth-child(even) td { background:#f7fafd; }
+
+  /* TROUBLE */
+  .trouble { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:7px; table-layout:fixed; }
+  .trouble td { vertical-align:top; width:50%; }
+  .tbox { border:1px solid #d0d8e4; border-radius:5px; overflow:hidden; font-size:8.5pt; }
+  .thead { background:#e8f0f7; color:#1a3a5c; font-weight:bold; padding:4px 9px; font-size:8.5pt; }
+  .tbody { padding:5px 9px; line-height:1.6; }
+
+  /* FOOTER */
+  .footer { border-top:1px solid #ccc; padding-top:5px; width:100%; font-size:7.5pt; color:#888; margin-top:8px; }
+  .footer td:last-child { text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="hdr">
+  <tr>
+    <td>
+      <h1>運営スタッフ テスト手順書<span style="font-size:10pt;font-weight:normal;color:#555;margin-left:8px;">【全員共通】</span></h1>
+      <div class="sub">梨花祭2026 入場管理システム 運営テスト</div>
+    </td>
+    <td class="right">梨花祭実行委員会<br>2026年　　月　　日</td>
+  </tr>
+</table>
+
+<div class="notice">📱 このテストでは<strong>学校のメールアドレス（@biblos.ac.jp）</strong>と<strong>スマートフォン</strong>を使います。メールが受信できる状態にしておいてください。<br>
+<strong>※ 作成したアカウントと招待リンクは梨花祭本番でもそのまま使えます。</strong>これ自体が本番準備になります。</div>
+
+<!-- 全体の流れ -->
+<div class="sec-label" style="margin-top:4px;">全体の流れ（約20〜30分）</div>
+<div style="background:#1a3a5c; border-radius:6px; margin-bottom:10px;">
+  <div class="flow-row">
+    <div class="fbox"><div class="fn">PHASE 1</div><div class="ft">グループ分け<br>OTP送信</div></div>
+    <div class="farr">→</div>
+    <div class="fbox"><div class="fn">PHASE 2</div><div class="ft">QR発行・<br>スクショ保存</div></div>
+    <div class="farr">→</div>
+    <div class="fbox"><div class="fn">PHASE 3</div><div class="ft">受付列に並ぶ<br>QRスキャン体験</div></div>
+    <div class="farr">→</div>
+    <div class="fbox"><div class="fn">PHASE 4</div><div class="ft">ダッシュボード<br>で確認・終了</div></div>
+  </div>
+</div>
+
+<!-- PHASE 1〜2 -->
+<div class="sec-label">PHASE 1〜2 ：「生徒役」として操作する（全員）</div>
+
+<table class="steps">
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">1</div></td>
+            <td class="card-title">システムを開く</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>スマートフォンのブラウザ（Safari / Chrome）で開く：</p>
+          <div class="url-box">rikasai-reservation.vercel.app/student</div>
+          <p class="hint">※ブックマーク推奨。当日も使います</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">2</div></td>
+            <td class="card-title">新規登録する</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>「新規登録」タブを選び、以下を入力して</p>
+          <p><span class="em">「認証コードを送信」</span>をタップ：</p>
+          <p style="margin-top:4px;">・学校メールアドレス<br>・氏名<br>・学年クラス</p>
+          <p class="hint">※ すでに登録済みの場合は「ログイン」タブへ</p>
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">3</div></td>
+            <td class="card-title">OTPでログインする</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>学校メール（Gmail）に<strong>6桁の認証コード</strong>が届く。</p>
+          <p>コードを入力して <span class="em">「ログイン」</span> をタップ。</p>
+          <p class="hint">※ メールが届くまで1〜2分かかる場合あり<br>
+          ※ 迷惑メールフォルダも確認してください<br>
+          ※ コードの有効期限は<strong>10分</strong></p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">4</div></td>
+            <td class="card-title">招待リンクを発行する</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>ログイン後のダッシュボードで、</p>
+          <p>「ゲストの名称を入力」欄に <span class="em">自分の名前</span> を入力して</p>
+          <p><span class="em">「招待リンクを生成」</span> をタップ。</p>
+          <p class="hint">※ 「テスト」「本人」など何でもOK</p>
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">5</div></td>
+            <td class="card-title">招待リンクを開いてQRコードをスクリーンショット保存する</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="vertical-align:top;width:50%;padding:0;">
+              <p>発行されたリンク（URL）をタップすると、</p>
+              <p><strong>QRコードが表示される画面</strong>に移動します。</p>
+              <p style="margin-top:3px;">そのままスクリーンショットを撮って保存してください。</p>
+            </td>
+            <td style="vertical-align:top;width:50%;padding-left:14px;">
+              <p class="hint">※ 保存したQRが梨花祭本番当日の「入場チケット」になります</p>
+              <p class="hint">※ 保存し忘れても、後で同じURLにアクセスすれば再表示できます</p>
+              <p class="hint">※ QR画面を開いたままにしておくと、PHASE 3でそのまま使えます</p>
+            </td>
+          </tr></table>
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- PHASE 3 -->
+<div class="sec-label">PHASE 3：受付スキャン体験</div>
+
+<div style="border:1.5px solid #c0cfe0; border-radius:6px; padding:8px 12px; margin-bottom:8px; font-size:8.5pt; background:#f7fafd;">
+  <p style="margin-bottom:4px;"><strong>受付スキャン担当者（別紙を持っている人）</strong>のいる受付に1列に並んでください。</p>
+  <p>順番が来たら、STEP 5 で表示したQRコードをスマホに表示して担当者に見せる。<br>担当者がスキャンして「✅ 入場承認」が表示されれば<strong>チェックイン完了</strong>です。</p>
+  <p class="hint" style="margin-top:4px;">※ スキャン後に「⚠️ 既に入場済み」と出たら正常です（二重入場の検知テスト）</p>
+</div>
+
+<!-- グループ分け -->
+<div class="sec-label">グループ分けについて（OTP送信のタイミングをずらすため）</div>
+
+<table class="gtbl">
+  <tr>
+    <th style="width:18%;">グループ</th>
+    <th style="width:32%;">対象</th>
+    <th>OTP送信を開始するタイミング</th>
+  </tr>
+  <tr>
+    <td style="text-align:center;font-weight:bold;">グループ A</td>
+    <td>最初の10名</td>
+    <td>管理者の「スタート！」の合図で STEP 1〜2 を開始する</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;font-weight:bold;">グループ B</td>
+    <td>次の10名</td>
+    <td>グループ A が STEP 3（ログイン）に進んだら開始</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;font-weight:bold;">グループ C</td>
+    <td>残りの10名</td>
+    <td>グループ B が STEP 3（ログイン）に進んだら開始</td>
+  </tr>
+</table>
+
+<!-- トラブル -->
+<div class="sec-label">トラブルシューティング</div>
+<table class="trouble">
+  <tr>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 OTPメールが届かない</div>
+        <div class="tbody">
+          ① 迷惑メールフォルダを確認<br>
+          ② 2〜3分待ってから「再送信」をタップ<br>
+          ③ それでもダメなら管理者に申告
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 QRスキャンがうまくいかない</div>
+        <div class="tbody">
+          ① スマホの画面の明るさを最大にする<br>
+          ② カメラから15〜30cm ほど離して見せる<br>
+          ③ それでもダメなら管理者に申告
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 「無効なメールアドレス」と出る</div>
+        <div class="tbody">
+          @biblos.ac.jp のアドレスを入力しているか確認。<br>
+          Gmail 等の個人アドレスは使用できません。
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 ログイン後に枠の上限と出る</div>
+        <div class="tbody">
+          すでに招待枠を使い切っています。<br>
+          管理者に申告して枠を追加してもらう。
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- FOOTER -->
+<table class="footer">
+  <tr>
+    <td>梨花祭2026 運営スタッフ テスト手順書【全員】</td>
+    <td>梨花祭実行委員会</td>
+  </tr>
+</table>
+
+</body>
+</html>

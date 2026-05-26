@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>受付スキャン担当 操作マニュアル</title>
+<style>
+  @page { size: A4; margin: 10mm 14mm 10mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #fff;
+    width: 100%;
+  }
+
+  /* HEADER */
+  .hdr { width:100%; border-bottom:3px solid #1a5c2a; margin-bottom:8px; padding-bottom:7px; }
+  .hdr td { vertical-align:top; }
+  .hdr .right { text-align:right; font-size:8.5pt; color:#666; line-height:1.8; white-space:nowrap; }
+  h1 { font-size:14pt; font-weight:bold; color:#1a5c2a; line-height:1.3; }
+  .sub { font-size:8.5pt; color:#555; margin-top:2px; }
+
+  /* NOTICE */
+  .notice { background:#e8f5e9; border:1.5px solid #4caf50; border-radius:5px; padding:6px 10px; font-size:8.5pt; margin-bottom:8px; }
+
+  /* SECTION LABEL */
+  .sec-label { font-size:9pt; font-weight:bold; color:#1a5c2a; border-left:4px solid #1a5c2a; padding-left:7px; margin-bottom:6px; margin-top:10px; }
+
+  /* STEPS */
+  .steps { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:6px; table-layout:fixed; }
+  .steps td { vertical-align:top; width:50%; }
+  .card { border:1.5px solid #a5d6a7; border-radius:6px; overflow:hidden; margin-bottom:6px; }
+  .card-head { background:#1a5c2a; color:#fff; padding:5px 10px; }
+  .card-head table { width:100%; border-collapse:collapse; }
+  .card-head td { padding:0; vertical-align:middle; }
+  .num { background:#fff; color:#1a5c2a; font-weight:bold; font-size:11pt; width:24px; height:24px; border-radius:12px; text-align:center; line-height:24px; }
+  .card-title { font-size:9.5pt; font-weight:bold; padding-left:7px !important; }
+  .card-body { padding:7px 10px; font-size:8.5pt; background:#f1f8f2; min-height:65px; }
+  .card-body p { margin-bottom:3px; }
+  .url-box { background:#d8eeda; border:1px solid #81c784; border-radius:3px; padding:3px 8px; font-size:8pt; color:#1a5c2a; font-weight:bold; margin:4px 0; }
+  .hint { font-size:7.5pt; color:#666; margin-top:2px; }
+  .em { background:#fff3cd; padding:1px 5px; border-radius:3px; font-weight:bold; color:#7a5000; }
+
+  /* RESULT BOXES */
+  .result-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:10px; }
+  .r-box { border-radius:6px; padding:8px 10px; font-size:8.5pt; border:1.5px solid; }
+  .r-ok  { background:#d4edda; border-color:#28a745; }
+  .r-dup { background:#fff3cd; border-color:#ffc107; }
+  .r-err { background:#f8d7da; border-color:#dc3545; }
+  .r-box .r-icon { font-size:18pt; display:block; text-align:center; margin-bottom:3px; }
+  .r-box .r-title { font-weight:bold; font-size:9pt; text-align:center; margin-bottom:4px; }
+  .r-box .r-action { font-size:7.5pt; color:#444; line-height:1.5; }
+
+  /* TROUBLE */
+  .trouble { width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:7px; table-layout:fixed; }
+  .trouble td { vertical-align:top; width:50%; }
+  .tbox { border:1px solid #a5d6a7; border-radius:5px; overflow:hidden; font-size:8.5pt; }
+  .thead { background:#d8eeda; color:#1a5c2a; font-weight:bold; padding:4px 9px; font-size:8.5pt; }
+  .tbody { padding:5px 9px; line-height:1.6; }
+
+  /* LOGIN INFO BOX */
+  .login-box { background:#f1f8f2; border:1.5px solid #81c784; border-radius:6px; padding:8px 12px; margin-bottom:8px; font-size:8.5pt; }
+  .login-box table { border-collapse:collapse; }
+  .login-box td { padding:2px 8px 2px 0; }
+  .login-box .lbl { color:#555; white-space:nowrap; }
+  .login-box .val { font-weight:bold; color:#1a5c2a; font-size:10pt; letter-spacing:0.05em; }
+
+  /* FOOTER */
+  .footer { border-top:1px solid #ccc; padding-top:5px; width:100%; font-size:7.5pt; color:#888; margin-top:8px; }
+  .footer td:last-child { text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="hdr">
+  <tr>
+    <td>
+      <h1>受付スキャン担当 操作マニュアル</h1>
+      <div class="sub">梨花祭2026 入場管理システム 運営テスト</div>
+    </td>
+    <td class="right">梨花祭実行委員会<br>2026年　　月　　日</td>
+  </tr>
+</table>
+
+<div class="notice">📋 このマニュアルは<strong>受付スキャン担当者（2〜3名）</strong>専用です。<br>
+担当者はスマートフォンまたはタブレットで管理者画面にログインし、QRスキャン操作を行います。</div>
+
+<!-- ログイン情報 -->
+<div class="sec-label" style="margin-top:4px;">STEP 1：管理者画面にログインする</div>
+
+<div class="login-box">
+  <p style="margin-bottom:6px;">ブラウザで以下のURLにアクセスし、担当者に割り当てられたアカウントでログイン：</p>
+  <div class="url-box" style="background:#d8eeda;">rikasai-reservation.vercel.app/admin</div>
+  <table style="margin-top:8px;">
+    <tr>
+      <td class="lbl">ユーザー名：</td>
+      <td class="val" id="username">_______________</td>
+    </tr>
+    <tr>
+      <td class="lbl">パスワード：</td>
+      <td class="val" id="password">_______________</td>
+    </tr>
+  </table>
+  <p class="hint" style="margin-top:4px;">※ アカウントは管理者から事前に伝えられます</p>
+</div>
+
+<!-- QRスキャン操作 -->
+<div class="sec-label">STEP 2：QRスキャン画面を起動する</div>
+
+<table class="steps">
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">1</div></td>
+            <td class="card-title">「QRスキャン」タブを開く</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>ログイン後、画面上部のタブから</p>
+          <p><span class="em">「📷 QRスキャン」</span>をタップ。</p>
+          <p class="hint">※ ログイン直後に自動でこのタブが選ばれる場合もあります</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">2</div></td>
+            <td class="card-title">スキャン専用モードに切り替える</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>右上の <span class="em">「📷 スキャン専用モード」</span> ボタンをタップ。</p>
+          <p>タブやメニューが消えてスキャン画面だけになります。</p>
+          <p class="hint">※ このモードが本番運用に最も近い状態です</p>
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">3</div></td>
+            <td class="card-title">カメラを選択してスキャン開始</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>「読み取り方法」を <span class="em">「Webカメラ」</span> のまま、</p>
+          <p>カメラ選択が表示されたら<strong>背面カメラ</strong>を選ぶ。</p>
+          <p><span class="em">「スキャン開始」</span>ボタンをタップ。</p>
+          <p class="hint">※ カメラの使用許可を求められたら「許可」を選ぶ</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="card">
+        <div class="card-head">
+          <table><tr>
+            <td width="24"><div class="num">4</div></td>
+            <td class="card-title">QRコードをスキャンする</td>
+          </tr></table>
+        </div>
+        <div class="card-body">
+          <p>来場者（テストではスタッフ）のスマホに</p>
+          <p>QRコードを表示してもらい、</p>
+          <p>カメラをQRに向ける。<strong>ボタンは押さなくてOK。</strong></p>
+          <p class="hint">※ 読み取り距離の目安：15〜30 cm<br>
+          ※ 画面の明るさを最大にしてもらうとスムーズ</p>
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- 結果の見方 -->
+<div class="sec-label">STEP 3：スキャン結果を確認する</div>
+
+<div class="result-grid">
+  <div class="r-box r-ok">
+    <span class="r-icon">✅</span>
+    <div class="r-title">入場承認</div>
+    <div class="r-action">正常にチェックイン完了。<br>「ありがとうございます」と声をかけて通す。</div>
+  </div>
+  <div class="r-box r-dup">
+    <span class="r-icon">⚠️</span>
+    <div class="r-title">既に入場済み</div>
+    <div class="r-action">同じQRを2回読んだ場合。<br>テストでは正常動作。本番では本人確認を行う。</div>
+  </div>
+  <div class="r-box r-err">
+    <span class="r-icon">❌</span>
+    <div class="r-title">エラー・無効</div>
+    <div class="r-action">QRが読み取れていないか、無効なQR。<br>もう一度スキャン。2回失敗で管理者に報告。</div>
+  </div>
+</div>
+
+<!-- 通常モードに戻る -->
+<div style="border:1.5px solid #a5d6a7; border-radius:6px; padding:7px 12px; margin-bottom:8px; font-size:8.5pt; background:#f1f8f2;">
+  <strong>スキャン専用モードを終了するには？</strong><br>
+  画面右上に <span class="em">「← 通常モードに戻る」</span> ボタンが出ています。タップすると通常の管理画面に戻ります。
+</div>
+
+<!-- トラブルシューティング -->
+<div class="sec-label">トラブルシューティング</div>
+<table class="trouble">
+  <tr>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 QRが全く読み取れない</div>
+        <div class="tbody">
+          ① 「スキャン停止」→「スキャン開始」でリセット<br>
+          ② 相手のスマホ画面の明るさを上げてもらう<br>
+          ③ カメラを15〜30cm 離す<br>
+          ④ 手動入力モードに切り替えてURLを貼り付け
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 カメラが起動しない</div>
+        <div class="tbody">
+          ① ブラウザのカメラ使用許可を確認<br>
+          　（設定 → Safari/Chrome → カメラ → 許可）<br>
+          ② ページを再読み込みして再起動<br>
+          ③ 別の端末に切り替える
+        </div>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 「ログインが切れた」と出る</div>
+        <div class="tbody">
+          再度 /admin を開いてログインし直す。<br>
+          （JWTの有効期限は4時間）
+        </div>
+      </div>
+    </td>
+    <td>
+      <div class="tbox">
+        <div class="thead">🚫 「招待リンクが見つかりません」</div>
+        <div class="tbody">
+          相手がまだQRを発行していない可能性あり。<br>
+          全員向け手順書の STEP 4〜5 を確認してもらう。
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<!-- FOOTER -->
+<table class="footer">
+  <tr>
+    <td>梨花祭2026 受付スキャン担当 操作マニュアル</td>
+    <td>梨花祭実行委員会</td>
+  </tr>
+</table>
+
+</body>
+</html>
