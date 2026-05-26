@@ -815,11 +815,6 @@
             qrReaderDiv: document.getElementById("qr-reader"),
             scanResultDiv: document.getElementById("result"),
             manualCodeInput: document.getElementById("manual-code"),
-            csvFile: document.getElementById("csv-file"),
-            prefixPart1: document.getElementById("prefix-part1"),
-            prefixPart2: document.getElementById("prefix-part2"),
-            generatedCodesDisplay: document.getElementById("generated-codes-display"),
-            generatedCodesTableBody: document.getElementById("generated-codes-table-body"),
             totalCount: document.getElementById("total-count"),
             checkedInCount: document.getElementById("checked-in-count"),
             unusedCount: document.getElementById("unused-count"),
@@ -1891,149 +1886,10 @@
         }
 
 
-        // === 招待コード生成 ===
-        async function downloadTemplate() {
-            try {
-                const response = await authFetch(`${API_BASE_URL}/api/download-template`, {
-                
-                });
-                if (!response.ok) throw new Error("テンプレートの取得に失敗しました");
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "invite_code_template.csv";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error("テンプレートDLエラー:", error);
-                showNotification("テンプレートのダウンロードに失敗しました", "error");
-            }
-        }
-
-        async function generateIndividual() {
-            const name = document.getElementById("individual-name").value.trim();
-            const prefixPart1 = dom.prefixPart1.value.trim();
-            const prefixPart2 = dom.prefixPart2.value.trim();
-
-            if (!name || !prefixPart1 || !prefixPart2) {
-                showNotification("名前とクラス情報(第1部, 第2部)はすべて必須です", "warning");
-                return;
-            }
-
-            try {
-                const response = await authFetch(`${API_BASE_URL}/api/generate-individual-invite-code`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, prefixPart1, prefixPart2 })
-                });
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error || "エラーが発生しました");
-
-                showNotification("招待コードを生成しました", "success");
-
-                // テーブル表示
-                let tableHtml = "";
-                data.codes.forEach(c => {
-                    tableHtml += `<tr>
-                        <td style="user-select: all; font-family: monospace;">${c.code}</td>
-                        <td>${c.name}</td>
-                    </tr>`;
-                });
-                dom.generatedCodesTableBody.innerHTML = tableHtml;
-                dom.generatedCodesDisplay.classList.remove("is-hidden");
-
-            } catch (error) {
-                console.error("個別生成エラー:", error);
-                showNotification(error.message, "error");
-            }
-        }
-
-        async function uploadCsvFile() {
-            const file = dom.csvFile.files[0];
-            const prefixPart1 = dom.prefixPart1.value.trim();
-            const prefixPart2 = dom.prefixPart2.value.trim();
-
-            if (!file) {
-                showNotification("CSVファイルを選択してください。", "warning");
-                return;
-            }
-            if (!prefixPart1 || !prefixPart2) {
-                showNotification("クラス (第1部) とクラス (第2部) を入力してください。", "warning");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("csvFile", file);
-            formData.append("prefixPart1", prefixPart1);
-            formData.append("prefixPart2", prefixPart2);
-
-            try {
-                // サーバーに送信 (既存ロジック)
-                const response = await authFetch(`${API_BASE_URL}/api/generate-invite-codes`, {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Unknown error occurred");
-                }
-
-                // サーバー生成CSVをBlobとして取得
-                const blob = await response.blob();
-
-                // --- ダウンロード ---
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "generated_invite_codes.csv";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-
-                showNotification("招待コードが正常に生成され、ダウンロードされました。", "success");
-
-                // --- 生成結果をテーブルに表示 ---
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const csvContent = e.target.result;
-                    displayGeneratedCodes(csvContent);
-                };
-                reader.readAsText(blob); // ←サーバー生成CSVを読み込む
-
-            } catch (error) {
-                console.error("招待コード生成エラー:", error);
-                showNotification(`招待コードの生成に失敗しました: ${error.message}`, "error");
-            }
-        }
-
-        // --- テーブル表示 ---
-        function displayGeneratedCodes(csvContent) {
-            const rows = csvContent.split(/\r\n|\n/).filter(row => row.trim() !== '');
-            let tableHtml = '';
-            rows.forEach(row => {
-                // ヘッダー行はスキップ
-                if (row.toLowerCase().startsWith('code')) return;
-                
-                // CSV行をカンマで分割 (単純な実装)
-                const parts = row.split(',');
-                const codePart = parts[0] ? parts[0].trim() : '';
-                const namePart = parts[1] ? parts[1].trim() : '';
-                
-                tableHtml += `<tr>
-                    <td style="user-select: all; font-family: monospace;">${codePart}</td>
-                    <td>${namePart}</td>
-                </tr>`;
-            });
-            dom.generatedCodesTableBody.innerHTML = tableHtml;
-            dom.generatedCodesDisplay.classList.remove('is-hidden');
-        }
-
+        // === 招待コード生成機能は廃止 (guest_slot 方式へ移行済み) ===
+        // 旧 /api/download-template, /api/generate-individual-invite-code,
+        // /api/generate-invite-codes を呼ぶ未使用関数はサーバー側エンドポイント
+        // 廃止に伴い削除しました。
 
         // === ダッシュボード/レポート ===
         async function loadDashboard() {

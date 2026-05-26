@@ -726,35 +726,6 @@ app.get('/api/admin/test/status', authenticateToken, authorizeRole(['admin']), a
     res.json({ isFixedOtpMode });
 });
 
-// ゲスト用 予約ステータス確認エンドポイント (認証不要・読み取り専用)
-app.get('/api/reservation-status/:id', async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const reservation = await Reservation.findByPk(id);
-
-        if (!reservation) {
-            return res.status(404).json({ found: false, message: '予約が見つかりません。' });
-        }
-
-        // プライバシー保護: 名前を部分マスキング
-        const fullName = reservation.name || '';
-        let maskedName = fullName;
-        if (fullName.length > 1) {
-            maskedName = fullName[0] + '＊'.repeat(fullName.length - 1);
-        }
-
-        res.json({
-            found: true,
-            id: reservation.id,
-            name: maskedName,
-            status: reservation.status,
-            createdAt: reservation.createdAt
-        });
-    } catch (error) {
-        next(error);
-    }
-});
-
 // ルート定義 (重複を解消)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'server/public/guest/index.html'));
@@ -1135,22 +1106,7 @@ app.get('/api/guest-entry/:token', async (req, res, next) => {
 });
 
 // ===== 実験・テスト支援機能 (管理者) =====
-
-// テストステータス取得
-app.get('/api/admin/test/status', authenticateToken, authorizeRole(['admin']), async (req, res) => {
-    res.json({ isFixedOtpMode });
-});
-
-// 全体テストモード（固定OTP）の切り替え
-app.post('/api/admin/test/toggle-otp', authenticateToken, authorizeRole(['admin']), async (req, res) => {
-    const { enabled } = req.body;
-    isFixedOtpMode = !!enabled;
-    res.json({ 
-        success: true, 
-        enabled: isFixedOtpMode, 
-        message: isFixedOtpMode ? 'テストモード（固定OTP: 123456）を有効にしました。' : 'テストモードを無効にしました。' 
-    });
-});
+// 注: test/status・test/toggle-otp・test/clear はファイル前半で定義済み
 
 // テストデータ生成 (クラス指定対応)
 app.post('/api/admin/test/generate', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
@@ -1244,31 +1200,6 @@ app.post('/api/admin/test/generate', authenticateToken, authorizeRole(['admin'])
 
         res.json({ success: true, message: `${generatedTotal}名のテストデータを生成しました。認証コードは「${fixedOtp}」で固定されています。` });
     } catch (error) { next(error); }
-});
-
-// テストデータ削除
-app.post('/api/admin/test/clear', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
-    try {
-        const { mode } = req.body;
-        if (mode === 'all') {
-            // 全削除 (管理者以外)
-            await GuestSlot.destroy({ where: {} });
-            await Student.destroy({ where: {} });
-            return res.json({ message: '管理アカウント以外の全データを削除しました。' });
-        } else {
-            // テスト生徒のみ削除
-            const allStudents = await Student.findAll();
-            const testStudents = allStudents.filter(s => s.email && s.email.startsWith('test_student_'));
-            const emails = testStudents.map(s => s.email);
-            if (emails.length > 0) {
-                await GuestSlot.destroy({ where: { student_email: { [Op.in]: emails.map(e => encryptDeterministic(e)) } } });
-                await Student.destroy({ where: { email: { [Op.in]: emails.map(e => encryptDeterministic(e)) } } });
-            }
-            return res.json({ message: 'テストデータに関連する生徒とスロットを削除しました。' });
-        }
-    } catch (error) {
-        next(error);
-    }
 });
 
 // 配布用名簿データ取得
