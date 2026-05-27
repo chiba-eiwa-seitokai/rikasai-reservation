@@ -532,6 +532,9 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         const student = await Student.findOne({ where: { id: req.params.id } });
         if (!student) return res.status(404).json({ message: '生徒が見つかりません。' });
@@ -543,7 +546,7 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
             token,
             student_email: student.email,
             student_name: student.name,
-            guest_name: guest_name.trim(), // assuming sanitization is done elsewhere or we don't strictly require escapeHtml since it's admin
+            guest_name: escapeHtml(guest_name.trim()),
             used: false
         });
 
@@ -558,11 +561,14 @@ app.put('/api/admin/guest-slots/:id', authenticateToken, authorizeRole(['admin']
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         const slot = await GuestSlot.findOne({ where: { id: req.params.id } });
         if (!slot) return res.status(404).json({ message: '指定された招待枠が見つかりません。' });
 
-        await GuestSlot.update({ guest_name: guest_name.trim() }, { where: { id: req.params.id } });
+        await GuestSlot.update({ guest_name: escapeHtml(guest_name.trim()) }, { where: { id: req.params.id } });
         res.json({ message: 'ゲスト名を更新しました。' });
     } catch (error) { next(error); }
 });
@@ -977,7 +983,9 @@ app.get('/api/student/dashboard', authenticateStudent, async (req, res, next) =>
             token: s.token,
             guest_name: s.guest_name,
             used: s.used,
-            createdAt: s.createdAt
+            createdAt: s.createdAt,
+            transfer_code: s.transfer_code || null,
+            transfer_expires_at: s.transfer_expires_at || null
         }));
         res.json({
             name: req.student.name,
@@ -1013,7 +1021,7 @@ app.put('/api/student/message-template', authenticateStudent, [
 
 // 招待リンク生成（ゲスト名を生徒が入力）
 app.post('/api/student/generate-links', authenticateStudent, [
-    body('guest_name').isString().trim().notEmpty().withMessage('ゲストの名前は必須です')
+    body('guest_name').isString().trim().notEmpty().withMessage('ゲストの名前は必須です').isLength({ max: 50 }).withMessage('ゲストの名前は50文字以内で入力してください')
 ], async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -1066,6 +1074,9 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         // 当日判定 (環境変数でカンマ区切りの日付指定を対応)
         const festivalDatesStr = process.env.FESTIVAL_DATES || '2026-07-17,2026-07-18';
@@ -1094,6 +1105,74 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
     } catch (error) {
         next(error);
     }
+});
+
+// ===== 招待枠 譲渡 =====
+
+// 譲渡コード発行
+app.post('/api/student/guest-slots/:id/transfer', authenticateStudent, async (req, res, next) => {
+    try {
+        const slot = await GuestSlot.findOne({ where: { id: req.params.id, student_email: encryptDeterministic(req.student.email) } });
+        if (!slot) return res.status(404).json({ message: '招待枠が見つかりません。' });
+        if (slot.used) return res.status(400).json({ message: '使用済みの枠は譲渡できません。' });
+
+        const transfer_code = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8文字英数字
+        const transfer_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await GuestSlot.update({ transfer_code, transfer_expires_at }, { where: { id: req.params.id } });
+        res.json({ transfer_code, expires_at: transfer_expires_at });
+    } catch (error) { next(error); }
+});
+
+// 譲渡コードキャンセル
+app.delete('/api/student/guest-slots/:id/transfer', authenticateStudent, async (req, res, next) => {
+    try {
+        const slot = await GuestSlot.findOne({ where: { id: req.params.id, student_email: encryptDeterministic(req.student.email) } });
+        if (!slot) return res.status(404).json({ message: '招待枠が見つかりません。' });
+        await GuestSlot.update({ transfer_code: null, transfer_expires_at: null }, { where: { id: req.params.id } });
+        res.json({ message: '譲渡をキャンセルしました。' });
+    } catch (error) { next(error); }
+});
+
+// 譲渡コードで枠を受け取る
+app.post('/api/student/claim-slot', authenticateStudent, [
+    body('transfer_code').isString().trim().notEmpty().withMessage('譲渡コードを入力してください')
+], async (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+        const { transfer_code } = req.body;
+        const slot = await GuestSlot.findOne({ where: { transfer_code: transfer_code.trim().toUpperCase() } });
+
+        if (!slot) return res.status(404).json({ message: '譲渡コードが見つかりません。' });
+        if (slot.used) return res.status(400).json({ message: 'この枠は既に使用済みです。' });
+        if (!slot.transfer_expires_at || new Date() > new Date(slot.transfer_expires_at)) {
+            return res.status(400).json({ message: '譲渡コードの有効期限が切れています。' });
+        }
+        if (slot.student_email === req.student.email) {
+            return res.status(400).json({ message: '自分の枠は受け取れません。' });
+        }
+
+        const newToken = crypto.randomBytes(24).toString('hex');
+        await GuestSlot.update({
+            student_email: req.student.email,
+            student_name: req.student.name,
+            guest_name: '',
+            token: newToken,
+            transfer_code: null,
+            transfer_expires_at: null
+        }, { where: { id: slot.id } });
+
+        const baseUrl = process.env.FRONTEND_URL || `http://localhost:${port}`;
+        res.json({
+            message: '招待枠を受け取りました。ゲストの名前を設定してください。',
+            id: slot.id,
+            token: newToken,
+            guest_name: '',
+            used: false,
+            invite_url: `${baseUrl}/?token=${newToken}`
+        });
+    } catch (error) { next(error); }
 });
 
 // ===== ゲスト入場QR =====

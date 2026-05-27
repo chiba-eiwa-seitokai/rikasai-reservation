@@ -2,433 +2,433 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>入場管理システム 実証実験計画（案）</title>
+<title>入場管理システム 実証実験 説明資料</title>
 <style>
-  @page { size: A4; margin: 20mm 20mm 20mm 20mm; }
+  @page { size: A4 landscape; margin: 12mm 16mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
-    font-size: 11pt;
+    font-size: 13pt;
     line-height: 1.7;
     color: #1a1a1a;
     background: #fff;
   }
 
-  /* ===== COVER PAGE ===== */
-  .cover {
+  /* ===== スライド共通 ===== */
+  .slide {
     page-break-after: always;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    text-align: center;
-    padding: 40mm 0;
+    width: 100%;
+    min-height: 180mm;
+    display: table;
   }
-  .cover-label {
-    font-size: 10pt;
-    color: #666;
-    border: 1px solid #bbb;
-    padding: 4px 16px;
+  .slide:last-child { page-break-after: auto; }
+
+  .slide-inner {
+    display: table-cell;
+    vertical-align: top;
+    padding: 0;
+  }
+
+  .slide-header {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: 16px;
+  }
+  .slide-header .page-num { font-size: 9pt; opacity: 0.65; margin-bottom: 2px; }
+  .slide-header h2 { font-size: 18pt; font-weight: bold; letter-spacing: 0.02em; }
+
+  /* ===== 表紙 ===== */
+  .cover-slide {
+    page-break-after: always;
+    width: 100%;
+    min-height: 180mm;
+    display: table;
+    background: linear-gradient(160deg, #1a3a5c 0%, #2a5a8c 100%);
+    border-radius: 4px;
+  }
+  .cover-inner {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
+    padding: 20mm 30mm;
+    color: #fff;
+  }
+  .cover-tag {
+    display: inline-block;
+    border: 1px solid rgba(255,255,255,0.6);
     border-radius: 20px;
-    margin-bottom: 24px;
-    letter-spacing: 0.05em;
+    font-size: 11pt;
+    padding: 4px 20px;
+    margin-bottom: 20px;
+    letter-spacing: 0.1em;
+    opacity: 0.85;
   }
   .cover-title {
-    font-size: 22pt;
+    font-size: 30pt;
     font-weight: bold;
-    line-height: 1.4;
-    color: #1a3a5c;
-    margin-bottom: 12px;
+    line-height: 1.35;
+    margin-bottom: 10px;
   }
-  .cover-subtitle {
-    font-size: 13pt;
-    color: #444;
-    margin-bottom: 40px;
+  .cover-sub {
+    font-size: 14pt;
+    opacity: 0.8;
+    margin-bottom: 28px;
   }
-  .cover-meta {
-    font-size: 10pt;
-    color: #666;
-    line-height: 2;
-  }
-  .cover-line {
+  .cover-divider {
     width: 60px;
     height: 3px;
-    background: #1a3a5c;
-    margin: 20px auto;
+    background: rgba(255,255,255,0.5);
+    margin: 0 auto 24px;
     border-radius: 2px;
   }
-
-  /* ===== CONTENT PAGE ===== */
-  .page {
-    page-break-after: always;
-    padding: 0 0 8mm 0;
-  }
-  .page:last-child { page-break-after: auto; }
-
-  .page-header {
-    background: #1a3a5c;
-    color: #fff;
-    padding: 10px 18px;
-    border-radius: 4px;
-    margin-bottom: 18px;
-  }
-  .page-header .page-num {
-    font-size: 8pt;
-    opacity: 0.7;
-    margin-bottom: 2px;
-  }
-  .page-header h2 {
-    font-size: 14pt;
-    font-weight: bold;
+  .cover-meta {
+    font-size: 12pt;
+    opacity: 0.75;
+    line-height: 2;
   }
 
-  /* ===== COMPARISON TABLE ===== */
-  .comparison-table {
+  /* ===== ポイントボックス ===== */
+  .points-row {
+    display: table;
     width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0 16px 0;
-    font-size: 10pt;
-  }
-  .comparison-table th {
-    background: #e8f0f7;
-    color: #1a3a5c;
-    padding: 8px 12px;
-    text-align: center;
-    border: 1px solid #c0cfe0;
-    font-weight: bold;
-  }
-  .comparison-table th.label-col { background: #f5f5f5; color: #555; width: 22%; }
-  .comparison-table th.plan-a { background: #1a3a5c; color: #fff; width: 39%; }
-  .comparison-table th.plan-b { background: #4a6a8c; color: #fff; width: 39%; }
-  .comparison-table td {
-    padding: 8px 12px;
-    border: 1px solid #d0d8e4;
-    vertical-align: top;
-    line-height: 1.6;
-  }
-  .comparison-table td.label { background: #f9f9f9; color: #555; font-weight: bold; text-align: center; font-size: 9.5pt; }
-  .comparison-table td.plan-a-cell { background: #f0f5fb; }
-  .comparison-table td.plan-b-cell { background: #f5f7fa; }
-
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 8.5pt;
-    font-weight: bold;
-  }
-  .badge-recommend { background: #1a3a5c; color: #fff; }
-  .badge-sub { background: #888; color: #fff; }
-
-  .merit { color: #1a7a40; }
-  .demerit { color: #8a3020; }
-
-  /* ===== FLOW ===== */
-  .flow-section {
+    border-collapse: separate;
+    border-spacing: 10px 0;
     margin-bottom: 14px;
   }
-  .flow-section-title {
-    background: #e8f0f7;
-    color: #1a3a5c;
-    font-weight: bold;
-    font-size: 10pt;
-    padding: 5px 12px;
-    border-left: 4px solid #1a3a5c;
-    margin-bottom: 6px;
-    border-radius: 0 3px 3px 0;
-  }
-  .flow-items {
-    padding-left: 16px;
-  }
-  .flow-item {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 4px;
-    font-size: 10pt;
-  }
-  .flow-item .actor {
-    min-width: 52px;
-    font-size: 8.5pt;
-    font-weight: bold;
-    color: #fff;
-    background: #4a6a8c;
-    padding: 1px 6px;
-    border-radius: 10px;
-    margin-right: 8px;
-    margin-top: 2px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .flow-item .actor.student { background: #2a7a50; }
-  .flow-item .actor.admin { background: #1a3a5c; }
-  .flow-item .actor.staff { background: #8a5a20; }
-
-  /* ===== SCHEDULE ===== */
-  .schedule-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0 14px 0;
-    font-size: 10pt;
-  }
-  .schedule-table th {
-    background: #1a3a5c;
-    color: #fff;
-    padding: 7px 12px;
-    text-align: center;
-    border: 1px solid #c0cfe0;
-  }
-  .schedule-table td {
-    padding: 7px 12px;
-    border: 1px solid #d0d8e4;
+  .point-box {
+    display: table-cell;
+    width: 33%;
+    background: #f4f8fc;
+    border: 1.5px solid #c0d4e8;
+    border-radius: 6px;
+    padding: 14px 16px;
     vertical-align: top;
   }
-  .schedule-table tr:nth-child(even) td { background: #f5f8fb; }
-  .schedule-table td.date-col { font-weight: bold; color: #1a3a5c; white-space: nowrap; width: 28%; }
-  .schedule-table td.highlight { background: #fff3cd !important; }
-
-  .prep-box {
-    background: #f9f9f9;
-    border: 1px solid #d0d8e4;
-    border-radius: 4px;
-    padding: 10px 14px;
-    margin-top: 12px;
+  .point-box .point-icon {
+    font-size: 22pt;
+    margin-bottom: 6px;
+    display: block;
   }
-  .prep-box h4 {
+  .point-box .point-label {
     font-size: 10pt;
     font-weight: bold;
     color: #1a3a5c;
+    margin-bottom: 4px;
+  }
+  .point-box .point-text {
+    font-size: 11pt;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  /* ===== ステップフロー ===== */
+  .step-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+  }
+  .step-table td { padding: 0; border: none; }
+
+  .step-box {
+    background: #f4f8fc;
+    border: 1.5px solid #c0d4e8;
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+  .step-box .step-num {
+    display: inline-block;
+    background: #1a3a5c;
+    color: #fff;
+    font-size: 10pt;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    border-radius: 50%;
     margin-bottom: 6px;
   }
-  .prep-list {
+  .step-box .step-who {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #fff;
+    background: #2a7a50;
+    padding: 1px 10px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 5px;
+  }
+  .step-box .step-who.staff { background: #8a5a20; }
+  .step-box .step-who.admin { background: #1a3a5c; }
+  .step-box .step-title {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #1a3a5c;
+    margin-bottom: 4px;
+  }
+  .step-box .step-desc {
+    font-size: 10pt;
+    color: #444;
+  }
+
+  .arrow-cell {
+    width: 24px;
+    text-align: center;
+    font-size: 18pt;
+    color: #1a3a5c;
+    vertical-align: middle;
+    padding: 0 2px;
+  }
+
+  /* ===== スケジュール表 ===== */
+  .sched-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12pt;
+    margin-bottom: 14px;
+  }
+  .sched-table th {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 8px 14px;
+    text-align: left;
+    border: 1px solid #1a3a5c;
+  }
+  .sched-table td {
+    padding: 9px 14px;
+    border: 1px solid #d0d8e4;
+    vertical-align: middle;
+  }
+  .sched-table tr:nth-child(even) td { background: #f5f8fb; }
+  .sched-table td.date { font-weight: bold; color: #1a3a5c; white-space: nowrap; width: 26%; }
+  .sched-table td.hl { background: #fff3cd !important; font-weight: bold; }
+  .sched-table td.date.hl { background: #ffe066 !important; }
+
+  /* ===== お願いリスト ===== */
+  .ask-box {
+    background: #fff8e8;
+    border: 2px solid #f0c040;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 12px;
+  }
+  .ask-box h3 {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #7a5000;
+    margin-bottom: 10px;
+  }
+  .ask-list {
     list-style: none;
     padding: 0;
   }
-  .prep-list li {
-    font-size: 10pt;
-    padding: 2px 0 2px 16px;
+  .ask-list li {
+    font-size: 12pt;
+    padding: 4px 0 4px 24px;
     position: relative;
+    color: #333;
   }
-  .prep-list li::before {
-    content: "□";
+  .ask-list li::before {
+    content: "▶";
     position: absolute;
     left: 0;
-    color: #1a3a5c;
+    color: #c08000;
+    font-size: 10pt;
+    top: 6px;
+  }
+
+  .footer-note {
+    font-size: 9pt;
+    color: #888;
+    text-align: right;
+    margin-top: 10px;
   }
 </style>
 </head>
 <body>
 
 <!-- ===== 表紙 ===== -->
-<div class="cover">
-  <div class="cover-label">職員会議資料　令和8年6月12日</div>
-  <div class="cover-title">
-    入場管理システム<br>実証実験 計画（案）
-  </div>
-  <div class="cover-line"></div>
-  <div class="cover-subtitle">
-    QRコードを活用した登校時入場管理の効率化
-  </div>
-  <div class="cover-meta">
-    担当：生徒会<br>
-    実験予定期間：令和8年7月上旬（1〜3日間）
-  </div>
-</div>
-
-<!-- ===== P1: 実施パターン比較 ===== -->
-<div class="page">
-  <div class="page-header">
-    <div class="page-num">1 / 3</div>
-    <h2>実施パターン比較：AプランとBプラン</h2>
-  </div>
-
-  <table class="comparison-table">
-    <thead>
-      <tr>
-        <th class="label-col">項目</th>
-        <th class="plan-a">Aプラン（推奨）<br><span style="font-size:9pt;font-weight:normal;">生徒が自分でQRを取得</span></th>
-        <th class="plan-b">Bプラン（代替案）<br><span style="font-size:9pt;font-weight:normal;">テストアカウントを配布</span></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="label">概要</td>
-        <td class="plan-a-cell">
-          <span class="badge badge-recommend">推奨</span><br>
-          生徒が自分のメールでOTP（ワンタイムパスワード）を受け取り、ログイン後にQRコードを発行・保存する
-        </td>
-        <td class="plan-b-cell">
-          <span class="badge badge-sub">代替</span><br>
-          管理者が全生徒分のアカウントを一括作成。固定パスワード「123456」でログイン（メール不要）
-        </td>
-      </tr>
-      <tr>
-        <td class="label">生徒の操作</td>
-        <td class="plan-a-cell">
-          ① 学校のシステムページにアクセス<br>
-          ② 学校メール宛のOTP（6桁）でログイン<br>
-          ③ マイページからQRコードを保存
-        </td>
-        <td class="plan-b-cell">
-          ① 配布された情報でシステムにアクセス<br>
-          ② 固定パスワード「123456」でログイン<br>
-          ③ QRコードを保存（または事前に紙で配布）
-        </td>
-      </tr>
-      <tr>
-        <td class="label">登校時</td>
-        <td class="plan-a-cell" colspan="2" style="text-align:center;background:#f5f8fb;">
-          <strong>共通：</strong>スマートフォンのQRコードを提示 → 係員がスキャン → 入場確認・記録
-        </td>
-      </tr>
-      <tr>
-        <td class="label">メリット</td>
-        <td class="plan-a-cell"><span class="merit">✓ 本番運用に近い形で検証できる</span><br><span class="merit">✓ 生徒がシステム操作を体験できる</span></td>
-        <td class="plan-b-cell"><span class="merit">✓ 手順が少なくトラブルリスクが低い</span><br><span class="merit">✓ メール環境に左右されない</span></td>
-      </tr>
-      <tr>
-        <td class="label">デメリット</td>
-        <td class="plan-a-cell"><span class="demerit">✗ 生徒のメール操作が必要</span></td>
-        <td class="plan-b-cell"><span class="demerit">✗ 本番運用とは異なる環境での検証</span></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p style="font-size:9.5pt;color:#444;background:#e8f0f7;padding:8px 14px;border-radius:4px;">
-    ※ 両プランとも「登校時のQRスキャン・入場記録」の部分は共通です。<br>
-    ※ どちらを選んでも後日もう一方のパターンで再実験することができます。
-  </p>
-</div>
-
-<!-- ===== P2: Aプラン実施フロー ===== -->
-<div class="page">
-  <div class="page-header">
-    <div class="page-num">2 / 3</div>
-    <h2>Aプラン 実施フロー（推奨案）</h2>
-  </div>
-
-  <div class="flow-section">
-    <div class="flow-section-title">【事前準備】実験日の1週間前まで</div>
-    <div class="flow-items">
-      <div class="flow-item">
-        <span class="actor admin">管理者</span>
-        <span>参加クラスの生徒情報（氏名・学校メールアドレス）をシステムに登録する</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor student">生徒</span>
-        <span>自分の学校メールアドレスを確認しておく（ログイン時に使用）</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor admin">管理者</span>
-        <span>玄関にQRスキャナー用の端末（スマートフォン可）を設置・動作確認</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="flow-section">
-    <div class="flow-section-title">【実験前日〜当日朝】QRコードの取得</div>
-    <div class="flow-items">
-      <div class="flow-item">
-        <span class="actor student">生徒</span>
-        <span>学校のシステムページ（/student）にスマートフォンでアクセスする</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor student">生徒</span>
-        <span>「OTPを送信する」を押し、学校メールに届いた6桁のコードを入力してログイン</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor student">生徒</span>
-        <span>マイページに表示されたQRコードをスクリーンショットで保存する</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="flow-section">
-    <div class="flow-section-title">【登校時・玄関】入場チェック</div>
-    <div class="flow-items">
-      <div class="flow-item">
-        <span class="actor student">生徒</span>
-        <span>スマートフォンに保存したQRコードを係の先生に提示する</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor staff">係員</span>
-        <span>スマートフォンでQRをスキャン → 入場確認画面に生徒の名前が表示される</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor admin">システム</span>
-        <span>入場記録（氏名・時刻）が自動でシステムに保存される</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="flow-section">
-    <div class="flow-section-title">【放課後・振り返り】</div>
-    <div class="flow-items">
-      <div class="flow-item">
-        <span class="actor admin">管理者</span>
-        <span>管理画面でその日の入場ログ（全生徒分）を確認・CSV出力できる</span>
-      </div>
-      <div class="flow-item">
-        <span class="actor admin">管理者</span>
-        <span>参加生徒・教員にアンケートを実施し、使いやすさ・課題点を収集する</span>
-      </div>
+<div class="cover-slide">
+  <div class="cover-inner">
+    <div class="cover-tag">職員会議　令和8年6月12日</div>
+    <div class="cover-title">入場管理システム<br>実証実験 実施計画</div>
+    <div class="cover-sub">QRコードを活用した登校時チェックインの実施について</div>
+    <div class="cover-divider"></div>
+    <div class="cover-meta">
+      担当：生徒会<br>
+      実施予定日：令和8年6月19日（木）
     </div>
   </div>
 </div>
 
-<!-- ===== P3: スケジュール・準備事項 ===== -->
-<div class="page">
-  <div class="page-header">
-    <div class="page-num">3 / 3</div>
-    <h2>スケジュール・準備事項</h2>
+<!-- ===== スライド1: この実験でやること ===== -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="slide-header">
+      <div class="page-num">1 / 3</div>
+      <h2>この実験でやること</h2>
+    </div>
+
+    <div class="points-row">
+      <div class="point-box">
+        <span class="point-icon">🎯</span>
+        <div class="point-label">目的</div>
+        <div class="point-text">梨花祭本番前に<strong>QRコード入場管理</strong>を実際に動かして課題を洗い出す</div>
+      </div>
+      <div class="point-box">
+        <span class="point-icon">📱</span>
+        <div class="point-label">方法</div>
+        <div class="point-text">生徒が自分のスマートフォンでQRを取得し、<strong>登校時に提示してスキャン</strong>する</div>
+      </div>
+      <div class="point-box">
+        <span class="point-icon">📅</span>
+        <div class="point-label">実施日</div>
+        <div class="point-text"><strong>6月19日（木）</strong><br>登校時間帯のみ<br>（1日間）</div>
+      </div>
+    </div>
+
+    <div class="points-row">
+      <div class="point-box">
+        <span class="point-icon">✅</span>
+        <div class="point-label">確認できること</div>
+        <div class="point-text">スキャン速度・混雑状況・生徒の操作習熟度・システムの安定性</div>
+      </div>
+      <div class="point-box">
+        <span class="point-icon">👥</span>
+        <div class="point-label">対象</div>
+        <div class="point-text">参加クラスの生徒全員<br>（クラスは会議にて決定）</div>
+      </div>
+      <div class="point-box">
+        <span class="point-icon">📋</span>
+        <div class="point-label">先生方へのお願い</div>
+        <div class="point-text">玄関でのQRスキャン担当<br>（操作は簡単です）</div>
+      </div>
+    </div>
+
+    <p class="footer-note">入場管理システム実証実験　令和8年6月12日　職員会議資料</p>
   </div>
+</div>
 
-  <table class="schedule-table">
-    <thead>
-      <tr>
-        <th>時期</th>
-        <th>内容</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="date-col highlight">6月12日（木）</td>
-        <td class="highlight">職員会議にて計画承認・実施クラス決定</td>
-      </tr>
-      <tr>
-        <td class="date-col">6月中旬</td>
-        <td>参加クラスへ説明・生徒の学校メールアドレスリスト収集</td>
-      </tr>
-      <tr>
-        <td class="date-col">6月下旬</td>
-        <td>システムへの生徒登録・リハーサル実施（事前に操作体験）</td>
-      </tr>
-      <tr>
-        <td class="date-col">7月上旬</td>
-        <td><strong>実証実験 本番（登校日 1〜3日間）</strong></td>
-      </tr>
-      <tr>
-        <td class="date-col">7月中旬</td>
-        <td>結果集計・アンケート分析・振り返りまとめ</td>
-      </tr>
-    </tbody>
-  </table>
+<!-- ===== スライド2: 当日の流れ ===== -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="slide-header">
+      <div class="page-num">2 / 3</div>
+      <h2>当日の流れ</h2>
+    </div>
 
-  <div class="prep-box">
-    <h4>準備チェックリスト</h4>
-    <ul class="prep-list">
-      <li>実施クラス・参加人数の確定</li>
-      <li>参加生徒の学校メールアドレスリストの作成</li>
-      <li>玄関係の先生へのスキャン手順説明（当日担当者に周知）</li>
-      <li>生徒向け操作説明プリントの作成・配布（1枚程度）</li>
-      <li>QRスキャン用スマートフォンまたは端末の確保</li>
-      <li>リハーサル日程の調整</li>
-    </ul>
+    <table class="step-table">
+      <tr>
+        <td style="width:18%">
+          <div class="step-box">
+            <div><span class="step-num">1</span></div>
+            <div class="step-who">生徒</div>
+            <div class="step-title">QR取得</div>
+            <div class="step-desc">前日までにシステムにログインし、QRコードをスクリーンショット保存</div>
+          </div>
+        </td>
+        <td class="arrow-cell">→</td>
+        <td style="width:18%">
+          <div class="step-box">
+            <div><span class="step-num">2</span></div>
+            <div class="step-who">生徒</div>
+            <div class="step-title">登校・提示</div>
+            <div class="step-desc">昇降口でスマートフォンのQRコードを係員に提示</div>
+          </div>
+        </td>
+        <td class="arrow-cell">→</td>
+        <td style="width:18%">
+          <div class="step-box">
+            <div><span class="step-num">3</span></div>
+            <div class="step-who staff">先生</div>
+            <div class="step-title">スキャン</div>
+            <div class="step-desc">スマートフォンでQRを読み取る（カメラを向けるだけ）</div>
+          </div>
+        </td>
+        <td class="arrow-cell">→</td>
+        <td style="width:18%">
+          <div class="step-box">
+            <div><span class="step-num">4</span></div>
+            <div class="step-who staff">先生</div>
+            <div class="step-title">確認</div>
+            <div class="step-desc">画面に「✅ 入場OK」または「❌ エラー」が表示される</div>
+          </div>
+        </td>
+        <td class="arrow-cell">→</td>
+        <td style="width:18%">
+          <div class="step-box">
+            <div><span class="step-num">5</span></div>
+            <div class="step-who admin">管理者</div>
+            <div class="step-title">集計確認</div>
+            <div class="step-desc">管理画面で到着人数・時刻をリアルタイム確認</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="ask-box">
+      <h3>⚠️ エラー時の対応</h3>
+      <ul class="ask-list">
+        <li>QRが読み取れない → もう一度スキャン、または手動入力モードに切り替え</li>
+        <li>「使用済み」と表示 → 本人確認の上で入場許可（口頭確認）</li>
+        <li>システムが応答しない → 紙名簿で対応し、生徒会（越川）に連絡</li>
+      </ul>
+    </div>
+
+    <p class="footer-note">入場管理システム実証実験　令和8年6月12日　職員会議資料</p>
   </div>
+</div>
 
-  <p style="font-size:9pt;color:#888;margin-top:14px;text-align:right;">
-    入場管理システム実証実験計画（案）　令和8年6月12日　職員会議資料
-  </p>
+<!-- ===== スライド3: スケジュール・準備 ===== -->
+<div class="slide">
+  <div class="slide-inner">
+    <div class="slide-header">
+      <div class="page-num">3 / 3</div>
+      <h2>スケジュール・準備事項</h2>
+    </div>
+
+    <table class="sched-table">
+      <thead>
+        <tr>
+          <th>日程</th>
+          <th>内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="date hl">6月12日（木）</td>
+          <td class="hl">本日の職員会議にて承認・実施クラス決定</td>
+        </tr>
+        <tr>
+          <td class="date">6月12〜17日</td>
+          <td>参加クラスへ説明・生徒向け手順書の配布・端末動作確認<br><span style="font-size:10pt;color:#555;">※ 生徒の登録はログイン時に自動完了（管理者の事前作業不要）</span></td>
+        </tr>
+        <tr>
+          <td class="date hl">6月19日（木）</td>
+          <td class="hl"><strong>実証実験 本番（登校時間帯・1日間）</strong></td>
+        </tr>
+        <tr>
+          <td class="date">6月20日〜</td>
+          <td>結果集計・アンケート分析・梨花祭本番への改善反映</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ask-box">
+      <h3>📋 先生方へのお願い（当日まで）</h3>
+      <ul class="ask-list">
+        <li>実施クラス・参加人数の確定（本日中）</li>
+        <li>玄関担当の先生への手順説明（生徒会が実施します）</li>
+        <li>QRスキャン用スマートフォンまたは端末の確保</li>
+      </ul>
+    </div>
+
+    <p class="footer-note">入場管理システム実証実験　令和8年6月12日　職員会議資料</p>
+  </div>
 </div>
 
 </body>
