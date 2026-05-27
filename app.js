@@ -94,7 +94,8 @@ app.use(express.static(path.join(__dirname, 'server/public')));
 // DB initialization (PostgreSQL)
 const { sequelize, User, Student, GuestSlot, Op, decrypt, decryptDeterministic, encrypt, encryptDeterministic } = require('./server/db-postgres');
 
-// テスト用グローバル設定
+// テスト用グローバル設定（本番環境では常に無効）
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 let isFixedOtpMode = false;
 const TEST_FIXED_OTP = '123456';
 
@@ -690,8 +691,12 @@ app.get('/api/export-report', authenticateToken, authorizeRole(['admin']), async
     res.status(404).json({ message: 'This endpoint is deprecated.' });
 });
 
-// ===== テスト支援機能 API (管理者のみ) =====
+// ===== テスト支援機能 API (管理者のみ・本番環境では無効) =====
 
+app.use('/api/admin/test', (req, res, next) => {
+    if (IS_PRODUCTION) return res.status(403).json({ message: 'テスト機能は本番環境では無効です。' });
+    next();
+});
 
 // データ削除
 app.post('/api/admin/test/clear', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
@@ -924,9 +929,9 @@ app.post('/api/student/verify-otp', loginLimiter, [
         const { email, otp } = req.body;
         const normalizedEmail = email.trim().toLowerCase();
 
-        // テストモード（全体）またはテスト用アカウントの判定
-        const isTestAccount = normalizedEmail.startsWith('test_student_');
-        const effectiveOtp = (isFixedOtpMode || isTestAccount) ? TEST_FIXED_OTP : null;
+        // テストモード（全体）またはテスト用アカウントの判定（本番では無効）
+        const isTestAccount = !IS_PRODUCTION && normalizedEmail.startsWith('test_student_');
+        const effectiveOtp = (!IS_PRODUCTION && (isFixedOtpMode || isTestAccount)) ? TEST_FIXED_OTP : null;
 
         const student = await Student.findOne({ where: { email: encryptDeterministic(normalizedEmail) } });
 

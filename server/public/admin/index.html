@@ -118,6 +118,24 @@
             </div>
         </div>
 
+        <!-- 生徒削除確認モーダル -->
+        <div id="delete-student-modal" class="modal">
+            <div class="modal-background" onclick="closeDeleteStudentModal()"></div>
+            <div class="modal-content" style="max-width:420px;">
+                <div class="glass-card">
+                    <h3 class="section-title" style="color:var(--color-error);">生徒アカウント削除</h3>
+                    <p id="delete-student-msg" style="margin-bottom:0.75rem; font-size:0.95rem;"></p>
+                    <p style="font-size:0.85rem; color:var(--color-text-sub); margin-bottom:0.5rem;">確認のため、以下に生徒の名前を入力してください：</p>
+                    <input id="delete-student-confirm-input" class="form-input" type="text" placeholder="" style="margin-bottom:0.5rem;">
+                    <p id="delete-student-error" style="color:var(--color-error);font-size:0.82rem;margin-bottom:0.75rem;display:none;">名前が一致しません。</p>
+                    <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                        <button class="btn btn-outline" onclick="closeDeleteStudentModal()">キャンセル</button>
+                        <button class="btn btn-danger" id="delete-student-confirm-btn" onclick="confirmDeleteStudent()">削除する</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 通知エリア -->
         <div id="notification-container" style="position: fixed; top: 2rem; right: 2rem; z-index: 1000;"></div>
         <div id="checkin-notification" class="checkin-notification"></div>
@@ -792,6 +810,7 @@
         let html5QrCodeScanner;
         let statusChart, hourlyChart, dailyChart, classChart;
         let autoRefreshIntervalId;
+        let _lastScannedQrData = null;
 
         // DOM要素のキャッシュ
         const dom = {
@@ -1264,6 +1283,7 @@
                 return;
             }
 
+            _lastScannedQrData = decodedText;
             dom.scanResultDiv.className = 'scan-result';
             dom.scanResultDiv.innerHTML = '確認中...';
 
@@ -1301,9 +1321,13 @@
                 console.error('QR確認エラー:', error);
                 showNotification('確認に失敗しました。', 'error');
                 dom.scanResultDiv.className = 'scan-result error';
-                dom.scanResultDiv.innerHTML = '<strong>通信エラー:</strong> サーバーとの通信に失敗しました';
+                dom.scanResultDiv.innerHTML = `<strong>通信エラー:</strong> サーバーとの通信に失敗しました<br><button class="btn btn-outline" style="margin-top:0.6rem;font-size:0.82rem;padding:0.3rem 0.8rem;" onclick="retryVerification()">🔄 再試行</button>`;
                 playErrorSound();
             }
+        }
+
+        function retryVerification() {
+            if (_lastScannedQrData) verifyReservation(_lastScannedQrData);
         }
 
         function playSuccessSound() {
@@ -1652,14 +1676,50 @@
             } catch (e) { showNotification('更新に失敗しました。', 'error'); }
         }
 
-        async function deleteStudent(id, name) {
-            if (!confirm(`「${name}」さんのアカウントと全ての招待スロットを削除しますか？\nこの操作は取り消せません。`)) return;
+        let _deleteStudentId = null;
+        let _deleteStudentName = '';
+
+        function deleteStudent(id, name) {
+            _deleteStudentId = id;
+            _deleteStudentName = name;
+            document.getElementById('delete-student-msg').textContent = `「${name}」さんのアカウントと全ての招待スロットを削除します。この操作は取り消せません。`;
+            const inp = document.getElementById('delete-student-confirm-input');
+            inp.value = '';
+            inp.placeholder = name;
+            document.getElementById('delete-student-error').style.display = 'none';
+            document.getElementById('delete-student-modal').classList.add('is-active');
+            setTimeout(() => inp.focus(), 50);
+        }
+
+        function closeDeleteStudentModal() {
+            document.getElementById('delete-student-modal').classList.remove('is-active');
+            _deleteStudentId = null;
+        }
+
+        async function confirmDeleteStudent() {
+            const inp = document.getElementById('delete-student-confirm-input');
+            const errEl = document.getElementById('delete-student-error');
+            const btn = document.getElementById('delete-student-confirm-btn');
+            if (inp.value.trim() !== _deleteStudentName) {
+                errEl.style.display = 'block';
+                inp.focus();
+                return;
+            }
+            errEl.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = '削除中...';
             try {
-                const res = await authFetch(`${API_BASE_URL}/api/admin/students/${id}`, { method: 'DELETE' });
+                const res = await authFetch(`${API_BASE_URL}/api/admin/students/${_deleteStudentId}`, { method: 'DELETE' });
                 const data = await res.json();
+                closeDeleteStudentModal();
                 showNotification(data.message, res.ok ? 'success' : 'error');
                 if (res.ok) loadStudentList();
-            } catch (e) { showNotification('削除に失敗しました。', 'error'); }
+            } catch (e) {
+                showNotification('削除に失敗しました。', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '削除する';
+            }
         }
 
         // === 生徒ゲスト管理モーダル ===
