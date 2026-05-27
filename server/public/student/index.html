@@ -356,12 +356,27 @@
         </div>
     </div>
 
+    <!-- ゲスト名変更モーダル -->
+    <div id="edit-name-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-name-modal-title">
+        <div class="modal-container" style="width:360px; padding:1.5rem;">
+            <h3 id="edit-name-modal-title" style="margin:0 0 1rem; font-size:1rem; color:var(--color-text);">ゲスト名を変更</h3>
+            <input id="edit-name-input" class="form-input" type="text" maxlength="50" placeholder="新しいゲスト名" style="margin-bottom:0.75rem;">
+            <p id="edit-name-error" style="color:var(--color-error);font-size:0.82rem;margin-bottom:0.75rem;display:none;"></p>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                <button class="btn" style="background:var(--color-bg);color:var(--color-text-sub);" onclick="closeEditNameModal()">キャンセル</button>
+                <button class="btn btn-primary" id="edit-name-confirm-btn" onclick="confirmEditGuestName()">変更する</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let studentToken = localStorage.getItem('student_token') || '';
         let studentEmail = localStorage.getItem('student_email') || '';
         let maxSlots = 3;
         let currentTab = 'login'; // 'login' | 'register'
         let currentMessageTemplate = ''; // テンプレート保存用
+        let _editNameSlotId = null;
+        let _editNameCurrent = '';
 
         // ===== 初期化 =====
         window.addEventListener('DOMContentLoaded', () => {
@@ -722,29 +737,64 @@
         }
 
         // ===== 名前編集 =====
-        async function editGuestName(id, currentName) {
-            const newName = prompt('新しい名前を入力してください:', currentName);
-            if (newName !== null && newName.trim() !== '' && newName !== currentName) {
-                try {
-                    const res = await fetch(`/api/student/guest-slots/${id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${studentToken}`
-                        },
-                        body: JSON.stringify({ guest_name: newName.trim() })
-                    });
-                    const data = await res.json();
+        function editGuestName(id, currentName) {
+            _editNameSlotId = id;
+            _editNameCurrent = currentName;
+            const input = document.getElementById('edit-name-input');
+            const errEl = document.getElementById('edit-name-error');
+            input.value = currentName;
+            errEl.style.display = 'none';
+            document.getElementById('edit-name-modal').classList.add('is-active');
+            setTimeout(() => { input.focus(); input.select(); }, 50);
+        }
 
-                    if (res.ok) {
-                        showNotification('名前を変更しました', 'success');
-                        await loadDashboard();
-                    } else {
-                        showNotification(data.message || '更新に失敗しました。', 'error');
-                    }
-                } catch (e) {
-                    showNotification('サーバーエラーが発生しました。', 'error');
+        function closeEditNameModal() {
+            document.getElementById('edit-name-modal').classList.remove('is-active');
+            _editNameSlotId = null;
+        }
+
+        async function confirmEditGuestName() {
+            const input = document.getElementById('edit-name-input');
+            const errEl = document.getElementById('edit-name-error');
+            const btn = document.getElementById('edit-name-confirm-btn');
+            const newName = input.value.trim();
+
+            if (!newName) {
+                errEl.textContent = '名前を入力してください。';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (newName === _editNameCurrent) {
+                closeEditNameModal();
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '更新中...';
+            try {
+                const res = await fetch(`/api/student/guest-slots/${_editNameSlotId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${studentToken}`
+                    },
+                    body: JSON.stringify({ guest_name: newName })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeEditNameModal();
+                    showNotification('名前を変更しました', 'success');
+                    await loadDashboard();
+                } else {
+                    errEl.textContent = data.message || '更新に失敗しました。';
+                    errEl.style.display = 'block';
                 }
+            } catch (e) {
+                errEl.textContent = 'サーバーエラーが発生しました。';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '変更する';
             }
         }
 
@@ -907,6 +957,12 @@
         function closeTicketModal() {
             document.getElementById('ticket-modal').classList.remove('is-active');
         }
+
+        // Enterキーでゲスト名変更モーダルを確定、Escapeで閉じる
+        document.getElementById('edit-name-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirmEditGuestName();
+            else if (e.key === 'Escape') closeEditNameModal();
+        });
 
         // ===== ユーティリティ =====
         function showNotification(message, type = 'success') {
