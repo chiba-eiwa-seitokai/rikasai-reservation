@@ -91,6 +91,7 @@
     "pdf-lib": "^1.17.1",
     "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
+    "playwright": "^1.60.0",
     "pngjs": "^5.0.0",
     "process-nextick-args": "^2.0.1",
     "proxy-addr": "^2.0.7",
