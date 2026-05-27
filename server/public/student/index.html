@@ -356,6 +356,33 @@
         </div>
     </div>
 
+    <!-- 初回ヘルプモーダル -->
+    <div id="student-help-modal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-container" style="width:400px; padding:1.5rem;">
+            <h2 style="margin:0 0 0.25rem; font-size:1.1rem; font-weight:700; color:var(--color-text);">🎉 ようこそ！使い方ガイド</h2>
+            <p style="font-size:0.8rem; color:var(--color-text-sub); margin-bottom:1.25rem;">初めてログインしました</p>
+            <ol style="padding-left:1.25rem; margin:0 0 1.25rem; display:flex; flex-direction:column; gap:0.85rem;">
+                <li style="font-size:0.9rem; line-height:1.55;">
+                    <strong>ゲスト名を入力して招待リンクを生成</strong><br>
+                    <span style="color:var(--color-text-sub); font-size:0.83rem;">招待したい相手の名前を入力し、「招待リンクを生成」を押してください。</span>
+                </li>
+                <li style="font-size:0.9rem; line-height:1.55;">
+                    <strong>LINEなどでリンクを送る</strong><br>
+                    <span style="color:var(--color-text-sub); font-size:0.83rem;">LINEボタン or コピーボタンでゲストにリンクを共有してください。</span>
+                </li>
+                <li style="font-size:0.9rem; line-height:1.55;">
+                    <strong>ゲストがQRコードを事前保存</strong><br>
+                    <span style="color:var(--color-text-sub); font-size:0.83rem;">受け取ったリンクを開くと入場用QRが表示されます。当日前に画像を保存するよう伝えてください。</span>
+                </li>
+                <li style="font-size:0.9rem; line-height:1.55;">
+                    <strong>当日、受付でQRを提示</strong><br>
+                    <span style="color:var(--color-text-sub); font-size:0.83rem;">スタッフがスキャンして入場完了です。</span>
+                </li>
+            </ol>
+            <button class="btn btn-primary" style="width:100%;" onclick="closeStudentHelp()">はじめる</button>
+        </div>
+    </div>
+
     <!-- ゲスト名変更モーダル -->
     <div id="edit-name-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-name-modal-title">
         <div class="modal-container" style="width:360px; padding:1.5rem;">
@@ -562,6 +589,7 @@
                 document.getElementById('page-dashboard').style.display = 'block';
                 document.getElementById('dash-name').textContent = `${data.name} さん${data.grade_class ? ' (' + data.grade_class + ')' : ''}`;
                 renderSlots(data.slots);
+                maybeShowStudentHelp();
             } catch (e) {
                 console.error('ダッシュボード読み込みエラー:', e);
                 logout();
@@ -956,6 +984,16 @@
 
         function closeTicketModal() {
             document.getElementById('ticket-modal').classList.remove('is-active');
+        }
+
+        function maybeShowStudentHelp() {
+            if (localStorage.getItem('student_help_shown')) return;
+            document.getElementById('student-help-modal').classList.add('is-active');
+        }
+
+        function closeStudentHelp() {
+            localStorage.setItem('student_help_shown', '1');
+            document.getElementById('student-help-modal').classList.remove('is-active');
         }
 
         // Enterキーでゲスト名変更モーダルを確定、Escapeで閉じる

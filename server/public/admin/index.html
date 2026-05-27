@@ -118,6 +118,35 @@
             </div>
         </div>
 
+        <!-- 初回ヘルプモーダル -->
+        <div id="admin-help-modal" class="modal">
+            <div class="modal-background" onclick="closeAdminHelp()"></div>
+            <div class="modal-content" style="max-width:440px;">
+                <div class="glass-card">
+                    <h3 class="section-title">📷 QRスキャンの手順</h3>
+                    <p style="font-size:0.82rem; color:var(--color-text-sub); margin-bottom:1rem;">初めてご利用の方へ</p>
+                    <ol style="padding-left:1.25rem; margin:0 0 1.25rem; display:flex; flex-direction:column; gap:0.85rem;">
+                        <li style="font-size:0.9rem; line-height:1.55;">
+                            <strong>「📷 QRスキャン」タブを開く</strong><br>
+                            <span style="font-size:0.83rem; color:var(--color-text-sub);">上部タブから「QRスキャン」を選択してください。</span>
+                        </li>
+                        <li style="font-size:0.9rem; line-height:1.55;">
+                            <strong>カメラを起動してQRを読み取る</strong><br>
+                            <span style="font-size:0.83rem; color:var(--color-text-sub);">「スキャン開始」を押し、ゲストのスマホに表示されたQRコードにカメラを向けてください。</span>
+                        </li>
+                        <li style="font-size:0.9rem; line-height:1.55;">
+                            <strong>画面の表示を確認して入場を許可</strong><br>
+                            <span style="font-size:0.83rem; color:var(--color-text-sub);">「✅ 入場完了しました」が表示されれば入場OK。「⚠️ 既に入場済みです」は口頭で確認してください。</span>
+                        </li>
+                    </ol>
+                    <div style="background:var(--color-bg); border-radius:var(--radius-md); padding:0.75rem; margin-bottom:1.25rem; font-size:0.82rem;">
+                        <strong>QRが読めない場合</strong>：「手動入力」に切り替え、URLをゲストから聞いてコピー＆ペーストしてください。
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;" onclick="closeAdminHelp()">わかりました</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 生徒削除確認モーダル -->
         <div id="delete-student-modal" class="modal">
             <div class="modal-background" onclick="closeDeleteStudentModal()"></div>
@@ -925,6 +954,7 @@
 
                     dom.navbar.style.display = "flex";
                     dom.mainContent.style.display = "block";
+                    maybeShowAdminHelp();
 
                     // 権限に基づくタブ制限
                     if (userRole === "scanner" || userRole === "student") {
@@ -1674,6 +1704,16 @@
                 showNotification(data.message, res.ok ? 'success' : 'error');
                 if (res.ok) loadStudentList();
             } catch (e) { showNotification('更新に失敗しました。', 'error'); }
+        }
+
+        function maybeShowAdminHelp() {
+            if (localStorage.getItem('admin_help_shown')) return;
+            document.getElementById('admin-help-modal').classList.add('is-active');
+        }
+
+        function closeAdminHelp() {
+            localStorage.setItem('admin_help_shown', '1');
+            document.getElementById('admin-help-modal').classList.remove('is-active');
         }
 
         let _deleteStudentId = null;
