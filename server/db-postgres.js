@@ -208,14 +208,6 @@ const GuestSlot = sequelize.define('GuestSlot', {
     checked_in_at: {
         type: DataTypes.DATE,
         allowNull: true
-    },
-    transfer_code: {
-        type: DataTypes.STRING(8),
-        allowNull: true
-    },
-    transfer_expires_at: {
-        type: DataTypes.DATE,
-        allowNull: true
     }
 });
 
