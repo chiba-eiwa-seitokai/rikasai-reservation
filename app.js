@@ -87,9 +87,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // 静的ファイルの提供
-app.use('/guest', express.static(path.join(__dirname, 'server/public/guest')));
-app.use('/student', express.static(path.join(__dirname, 'server/public/student')));
-app.use(express.static(path.join(__dirname, 'server/public')));
+const staticOptions = {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        }
+    }
+};
+app.use('/guest',   express.static(path.join(__dirname, 'server/public/guest'),   staticOptions));
+app.use('/student', express.static(path.join(__dirname, 'server/public/student'), staticOptions));
+app.use(            express.static(path.join(__dirname, 'server/public'),         staticOptions));
 
 // DB initialization (PostgreSQL)
 const { sequelize, User, Student, GuestSlot, Op, decrypt, decryptDeterministic, encrypt, encryptDeterministic } = require('./server/db-postgres');

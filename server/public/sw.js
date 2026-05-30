@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rikasai-v2';
+const CACHE_NAME = 'rikasai-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/student/index.html',
@@ -56,23 +56,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((response) => {
-      // キャッシュがあればそれを返し、なければネットワークから取得
-      return response || fetch(event.request).then((fetchResponse) => {
-        // 取得したファイルをキャッシュに追加（動的キャッシュ）
-        if (fetchResponse.status === 200) {
-          const resClone = fetchResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, resClone);
-          });
-        }
-        return fetchResponse;
-      });
-    }).catch(() => {
-      if (event.request.mode === 'navigate') {
-        return caches.match('/student/index.html');
-      }
-    })
-  );
+  const isHtml = event.request.mode === 'navigate' || event.request.url.endsWith('.html');
+
+  if (isHtml) {
+    // HTMLはnetwork-first：常にサーバーから取得し、オフライン時だけキャッシュにフォールバック
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return res;
+      }).catch(() => caches.match(event.request))
+    );
+  } else {
+    // CSS・JS・画像はcache-first（パフォーマンス維持）
+    event.respondWith(
+      caches.match(event.request, { ignoreSearch: true }).then((response) => {
+        return response || fetch(event.request).then((fetchResponse) => {
+          if (fetchResponse.status === 200) {
+            const resClone = fetchResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+          }
+          return fetchResponse;
+        });
+      })
+    );
+  }
 });
