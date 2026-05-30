@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>説明会 進行台本（司会者用）</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm 18mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+  }
+
+  .page {
+    page-break-after: always;
+    padding: 0 0 6mm 0;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .page-header {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .page-header h1 { font-size: 13pt; font-weight: bold; }
+  .page-header .sub { font-size: 9pt; opacity: 0.85; margin-top: 2px; }
+
+  /* ===== AGENDA BLOCK ===== */
+  .agenda {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 10pt;
+  }
+  .agenda th {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 6px 10px;
+    border: 1px solid #c0cfe0;
+    text-align: center;
+  }
+  .agenda td {
+    padding: 6px 10px;
+    border: 1px solid #d0d8e4;
+    vertical-align: top;
+  }
+  .agenda td.time { font-weight: bold; color: #1a3a5c; white-space: nowrap; width: 14%; text-align: center; }
+  .agenda td.min  { text-align: center; width: 10%; color: #555; }
+  .agenda td.part { font-weight: bold; width: 26%; }
+  .agenda tr:nth-child(even) td { background: #f5f8fb; }
+  .agenda tr.highlight td { background: #fff3cd !important; }
+
+  /* ===== SCRIPT BLOCK ===== */
+  .script-block {
+    border: 1px solid #d0d8e4;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .script-header {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 6px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .script-header .part-title { font-weight: bold; font-size: 10.5pt; }
+  .script-header .part-time { font-size: 9pt; opacity: 0.85; }
+  .script-body { padding: 10px 14px; }
+
+  .say {
+    background: #f0f5fb;
+    border-left: 4px solid #1a3a5c;
+    padding: 6px 10px;
+    margin: 6px 0;
+    font-size: 10pt;
+    border-radius: 0 3px 3px 0;
+  }
+  .say::before { content: "▶ 話す内容："; font-weight: bold; color: #1a3a5c; display: block; font-size: 9pt; margin-bottom: 2px; }
+
+  .do {
+    background: #f9f9f9;
+    border-left: 4px solid #888;
+    padding: 5px 10px;
+    margin: 6px 0;
+    font-size: 9.5pt;
+    color: #444;
+    border-radius: 0 3px 3px 0;
+  }
+  .do::before { content: "▷ 操作・アクション："; font-weight: bold; color: #555; display: block; font-size: 9pt; margin-bottom: 1px; }
+
+  .check {
+    background: #fff3cd;
+    border-left: 4px solid #e0a000;
+    padding: 5px 10px;
+    margin: 6px 0;
+    font-size: 9.5pt;
+    border-radius: 0 3px 3px 0;
+  }
+  .check::before { content: "✓ 確認ポイント："; font-weight: bold; color: #8a6000; display: block; font-size: 9pt; margin-bottom: 1px; }
+
+  .practice-box {
+    background: #e8f5ec;
+    border: 1px solid #90c0a0;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 6px 0;
+  }
+  .practice-box h4 { font-size: 10pt; font-weight: bold; color: #1a5a2a; margin-bottom: 4px; }
+  .practice-box ol { padding-left: 18px; font-size: 9.5pt; }
+  .practice-box li { margin-bottom: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ===== P1: アジェンダ ===== -->
+<div class="page">
+  <div class="page-header">
+    <h1>梨花祭 入場管理システム　実行委員向け説明会　進行台本</h1>
+    <div class="sub">司会者用 ／ 所要時間：約60分　※実行委員シフト制・全体約50名のため複数回開催</div>
+  </div>
+
+  <table class="agenda">
+    <thead>
+      <tr>
+        <th>目安時刻</th>
+        <th>時間</th>
+        <th>パート</th>
+        <th>内容</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="time">0:00</td>
+        <td class="min">5分</td>
+        <td class="part">① 開会・自己紹介</td>
+        <td>説明会の目的・今日やること・配布資料の確認</td>
+      </tr>
+      <tr>
+        <td class="time">0:05</td>
+        <td class="min">10分</td>
+        <td class="part">② システム・当日の概要</td>
+        <td>QR入場システムの仕組み・当日の流れ・配置の確認</td>
+      </tr>
+      <tr class="highlight">
+        <td class="time">0:15</td>
+        <td class="min">10分</td>
+        <td class="part">③ 操作手順の実演</td>
+        <td>司会者が実際にスキャンを実演。成功・エラーの両方を見せる</td>
+      </tr>
+      <tr class="highlight">
+        <td class="time">0:25</td>
+        <td class="min">20分</td>
+        <td class="part">④ 実機練習</td>
+        <td>参加者全員がスキャンを体験（グループに分かれて順番に）</td>
+      </tr>
+      <tr>
+        <td class="time">0:45</td>
+        <td class="min">10分</td>
+        <td class="part">⑤ 緊急時対応の確認</td>
+        <td>よくあるトラブルと対応方法を配布資料で確認</td>
+      </tr>
+      <tr>
+        <td class="time">0:55</td>
+        <td class="min">5分</td>
+        <td class="part">⑥ 質疑応答・閉会</td>
+        <td>質問受付・当日の集合場所・時刻の最終確認</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt;color:#555;background:#f5f8fb;padding:8px 12px;border-radius:4px;">
+    ※ 黄色の行が特に重要なパート。③・④で実際に手を動かしてもらうことが目標。<br>
+    ※ 実機練習では端末3台を使い、5〜6名ずつのグループで順番に練習する。
+  </p>
+</div>
+
+<!-- ===== P2: 台本 ① ② ③ ===== -->
+<div class="page">
+  <div class="page-header">
+    <h1>進行台本</h1>
+    <div class="sub">① 開会〜③ 操作実演</div>
+  </div>
+
+  <div class="script-block">
+    <div class="script-header">
+      <span class="part-title">① 開会・自己紹介（0:00〜　5分）</span>
+    </div>
+    <div class="script-body">
+      <div class="do">配布資料を全員に配る。端末3台をテーブルに並べておく。</div>
+      <div class="say">
+        本日はお集まりありがとうございます。生徒会の〇〇です。<br>
+        今日はこの説明会で、梨花祭当日に使う入場管理システムの操作を覚えてもらいます。<br>
+        所要時間は約60分です。後半に実際にスキャンを体験してもらう時間を設けていますので、最後まで一緒に取り組んでください。<br>
+        手元の配布資料と一緒に確認していきます。
+      </div>
+    </div>
+  </div>
+
+  <div class="script-block">
+    <div class="script-header">
+      <span class="part-title">② システム・当日の概要（0:05〜　10分）</span>
+    </div>
+    <div class="script-body">
+      <div class="say">
+        まずシステムの仕組みを簡単に説明します。<br><br>
+        梨花祭では、来場者（招待者・保護者）は事前に生徒から招待リンクを受け取り、そこからQRコードを取得してスマートフォンに保存してきます。<br>
+        当日みなさんの仕事は、正門前のテントでそのQRコードをスキャンして入場確認をすることです。<br><br>
+        配布資料の1ページ目を見てください。テントは2種類あります。「招待者テント」と「保護者テント」です。<br>
+        みなさんの担当テントは当日または前日に別途お知らせします。
+      </div>
+      <div class="check">「招待者・保護者の違い」「担当テントは後日連絡」の2点が伝わっているか確認。</div>
+      <div class="say">
+        受付時間は9時から14時です。9時前には集合してテントの設置と動作確認をしてもらいます。<br>
+        具体的な集合時刻は当日資料で確認してください。
+      </div>
+    </div>
+  </div>
+
+  <div class="script-block">
+    <div class="script-header">
+      <span class="part-title">③ 操作手順の実演（0:15〜　10分）</span>
+    </div>
+    <div class="script-body">
+      <div class="do">端末1台を手に持ち、全員から見える位置に立つ。スキャン画面（/admin/verify）を開く。</div>
+      <div class="say">
+        では実際の操作を見てもらいます。配布資料1ページ目の「操作手順」と照らし合わせながら見てください。<br><br>
+        まず、ブラウザでスキャン画面を開きます。URLは「〇〇〇〇/admin/verify」です。<br>
+        こうするとカメラが起動してスキャン待機状態になります。
+      </div>
+      <div class="do">事前に準備したテスト用QRコードをスキャンして「入場OK」画面を全員に見せる。</div>
+      <div class="say">
+        QRコードをカメラに向けると…こうやって名前が表示されます。これが「入場OK」の状態です。<br>
+        この画面が出たらゲストを昇降口へ案内してください。
+      </div>
+      <div class="do">同じQRを再度スキャンして「入場済み」エラーを見せる。</div>
+      <div class="say">
+        同じQRをもう一度スキャンするとこうなります。「入場済み」と表示されます。<br>
+        これは二重入場を防ぐためです。このエラーが出たら生徒会担当に連絡してください。<br><br>
+        QRが読み取れないとき、またはゲストがQRを持っていないときは、<strong>自分で判断せず担当の先生のところへゲストを案内してください。</strong><br>
+        手書き記録での対応は先生だけが行います。実行委員はしません。詳しくは資料2ページ目を確認してください。
+      </div>
+      <div class="check">「入場OK画面」と「エラー画面」の両方を見せたか確認。質問があれば受ける。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== P3: 台本 ④ ⑤ ⑥ ===== -->
+<div class="page">
+  <div class="page-header">
+    <h1>進行台本</h1>
+    <div class="sub">④ 実機練習〜⑥ 閉会</div>
+  </div>
+
+  <div class="script-block">
+    <div class="script-header">
+      <span class="part-title">④ 実機練習（0:25〜　20分）</span>
+    </div>
+    <div class="script-body">
+      <div class="do">参加者を端末3台に対応した3グループに分ける。シフトの人数に応じてグループ規模を調整する。各グループに端末1台を渡す。</div>
+      <div class="say">
+        では実際に体験してもらいます。3グループに分かれてください。<br>
+        各グループに端末を1台ずつ渡します。グループ内で順番に練習してください。<br><br>
+        練習の流れはこうです。
+      </div>
+      <div class="practice-box">
+        <h4>実機練習の進め方（各グループ）</h4>
+        <ol>
+          <li>端末でスキャン画面（/admin/verify）を開く</li>
+          <li>隣の人のスマートフォンにテスト用QRを表示してもらい、スキャンする</li>
+          <li>「入場OK」が表示されたら成功。次の人に交代</li>
+          <li>全員1回ずつ体験したら、エラー画面も確認する（同じQRを2回スキャン）</li>
+        </ol>
+      </div>
+      <div class="do">練習中は各グループを回り、操作に詰まっている人をサポートする。残り5分で全体に声かけ。</div>
+      <div class="check">全員が最低1回スキャンを体験できたか確認してから次へ進む。</div>
+    </div>
+  </div>
+
+  <div class="script-block">
+    <div class="script-header">
+      <span class="part-title">⑤ 緊急時対応の確認（0:45〜　10分）</span>
+    </div>
+    <div class="script-body">
+      <div class="do">配布資料2ページ目を開いてもらう。</div>
+      <div class="say">
+        次に、当日よく起きるトラブルと対応を確認します。資料の2ページ目を見てください。<br><br>
+        一番多いのは「QRが読み取れない」ケースです。まず明るい場所で画面を大きく表示してもらう、それでも無理なら<strong>担当の先生のところへゲストを案内してください。</strong><br>
+        QRを持っていないゲストも同様に先生へ案内します。<strong>手書き記録は先生だけが行います。実行委員はしません。</strong><br><br>
+        「入場済み」エラーが出たときは自分で判断せず、必ず生徒会システム担当に連絡してください。<br><br>
+        ネットワーク障害や端末トラブルも同様に、先生か生徒会担当にすぐ報告してください。<br>
+        連絡先は資料に書いてあります。
+      </div>
+      <div class="check">「QR対応不可・QRなし → 先生へ案内（手書きは先生のみ）」「エラーは生徒会担当に連絡」の2点が伝わったか確認。</div>
+    </div>
+  </div>
+
+  <div class="script-block">
+    <div class="script-header">
+      <span class="part-title">⑥ 質疑応答・閉会（0:55〜　5分）</span>
+    </div>
+    <div class="script-body">
+      <div class="say">
+        最後に質問を受け付けます。何かありますか？<br>
+        （質問に回答）<br><br>
+        今日覚えてほしいことは3つです。<br>
+        ①スキャン画面のURL、②入場OKとエラーの見分け方、③QR対応できないゲストは先生へ案内（手書きは先生のみ）。<br><br>
+        当日の集合場所と時刻は〇〇です。担当テントは前日までに連絡します。<br>
+        本日はありがとうございました。
+      </div>
+      <div class="do">配布資料は持ち帰ってもらう。端末を回収する。</div>
+    </div>
+  </div>
+
+  <p style="font-size:9pt;color:#555;background:#f5f8fb;padding:8px 12px;border-radius:4px;margin-top:4px;">
+    ※ 集合時刻・場所は〇〇の部分を記入してから使用すること。<br>
+    ※ 実機練習用のテスト用QRは説明会前に生徒会が準備しておく。
+  </p>
+</div>
+
+</body>
+</html>

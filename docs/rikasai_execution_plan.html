@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>梨花祭 入場管理システム 当日実行計画</title>
+<style>
+  @page { size: A4; margin: 20mm 20mm 20mm 20mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fff;
+  }
+
+  /* ===== COVER PAGE ===== */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 40mm 0;
+  }
+  .cover-label {
+    font-size: 10pt;
+    color: #666;
+    border: 1px solid #bbb;
+    padding: 4px 16px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+  .cover-title {
+    font-size: 22pt;
+    font-weight: bold;
+    line-height: 1.4;
+    color: #7a1a2a;
+    margin-bottom: 12px;
+  }
+  .cover-meta {
+    font-size: 10pt;
+    color: #666;
+    line-height: 2;
+  }
+  .cover-line {
+    width: 60px;
+    height: 3px;
+    background: #7a1a2a;
+    margin: 20px auto;
+  }
+
+  /* ===== CONTENT PAGE ===== */
+  .page {
+    page-break-after: always;
+    padding: 0 0 8mm 0;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .page-header {
+    background: #7a1a2a;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 4px;
+    margin-bottom: 18px;
+  }
+  .page-header .page-num {
+    font-size: 8pt;
+    opacity: 0.7;
+    margin-bottom: 2px;
+  }
+  .page-header h2 {
+    font-size: 14pt;
+    font-weight: bold;
+  }
+
+  /* ===== SECTION TITLE ===== */
+  .section-title {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #7a1a2a;
+    border-left: 4px solid #7a1a2a;
+    padding-left: 10px;
+    margin: 0 0 8px 0;
+  }
+
+  /* ===== OVERVIEW TABLE ===== */
+  .overview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 18px 0;
+    font-size: 10pt;
+  }
+  .overview-table th {
+    background: #7a1a2a;
+    color: #fff;
+    padding: 7px 14px;
+    text-align: left;
+    border: 1px solid #c08090;
+    width: 28%;
+    font-weight: bold;
+  }
+  .overview-table td {
+    padding: 7px 14px;
+    border: 1px solid #d8c0c5;
+    background: #fdf9fa;
+  }
+  .overview-table tr:nth-child(even) td { background: #f5ecee; }
+  .tbd { color: #999; font-style: italic; }
+
+  /* ===== ROLE TABLE ===== */
+  .role-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 12px 0;
+    font-size: 10pt;
+  }
+  .role-table th {
+    background: #7a1a2a;
+    color: #fff;
+    padding: 7px 12px;
+    text-align: center;
+    border: 1px solid #c08090;
+  }
+  .role-table td {
+    padding: 7px 12px;
+    border: 1px solid #d8c0c5;
+    vertical-align: top;
+  }
+  .role-table tr:nth-child(even) td { background: #f5ecee; }
+  .role-table td.location { font-weight: bold; color: #7a1a2a; white-space: nowrap; }
+  .role-table td.count { text-align: center; }
+
+  /* ===== FLOW ===== */
+  .flow-section { margin-bottom: 13px; }
+  .flow-section-title {
+    background: #f5ecee;
+    color: #7a1a2a;
+    font-weight: bold;
+    font-size: 10pt;
+    padding: 5px 12px;
+    border-left: 4px solid #7a1a2a;
+    margin-bottom: 6px;
+    border-radius: 0 3px 3px 0;
+  }
+  .flow-items { padding-left: 16px; }
+  .flow-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 4px;
+    font-size: 10pt;
+  }
+  .flow-item .actor {
+    min-width: 58px;
+    font-size: 8.5pt;
+    font-weight: bold;
+    color: #fff;
+    background: #4a6a8c;
+    padding: 1px 6px;
+    border-radius: 10px;
+    margin-right: 8px;
+    margin-top: 2px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .flow-item .actor.guest   { background: #8a5020; }
+  .flow-item .actor.student { background: #2a7a50; }
+  .flow-item .actor.iinkai  { background: #7a1a2a; }
+  .flow-item .actor.seito   { background: #1a3a5c; }
+  .flow-item .actor.system  { background: #444; }
+
+  /* ===== EMERGENCY BOX ===== */
+  .emergency-box {
+    background: #fff8f8;
+    border: 1px solid #e0a0a0;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+  }
+  .emergency-box h4 {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #7a1a2a;
+    margin-bottom: 6px;
+  }
+  .emergency-list {
+    list-style: none;
+    padding: 0;
+  }
+  .emergency-list li {
+    font-size: 10pt;
+    padding: 3px 0 3px 16px;
+    position: relative;
+    border-bottom: 1px solid #f0d0d0;
+  }
+  .emergency-list li:last-child { border-bottom: none; }
+  .emergency-list li::before {
+    content: "▶";
+    position: absolute;
+    left: 0;
+    color: #c04040;
+    font-size: 8pt;
+    top: 6px;
+  }
+
+  /* ===== BRIEFING BOX ===== */
+  .briefing-box {
+    background: #f5f8fb;
+    border: 1px solid #c0cfe0;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-top: 0;
+  }
+  .briefing-box h4 {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #1a3a5c;
+    margin-bottom: 6px;
+  }
+  .briefing-list {
+    list-style: none;
+    padding: 0;
+  }
+  .briefing-list li {
+    font-size: 10pt;
+    padding: 2px 0 2px 16px;
+    position: relative;
+  }
+  .briefing-list li::before {
+    content: "□";
+    position: absolute;
+    left: 0;
+    color: #1a3a5c;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 表紙 ===== -->
+<div class="cover">
+  <div class="cover-label">梨花祭 当日資料</div>
+  <div class="cover-title">
+    梨花祭<br>入場管理システム<br>当日実行計画
+  </div>
+  <div class="cover-line"></div>
+  <div class="cover-meta">
+    担当：文化祭実行委員・生徒会<br>
+    実施日：令和8年7月17日（金）・18日（土）
+  </div>
+</div>
+
+<!-- ===== P1: 当日概要 ＋ 役割・配置 ===== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">1 / 3</div>
+    <h2>当日概要　／　役割・配置</h2>
+  </div>
+
+  <h3 class="section-title">当日概要</h3>
+  <table class="overview-table">
+    <tbody>
+      <tr>
+        <th>実施日程</th>
+        <td>令和8年7月17日（金）・18日（土）</td>
+      </tr>
+      <tr>
+        <th>受付時間帯</th>
+        <td>9:00〜14:00（ゲスト入場・受付時間）</td>
+      </tr>
+      <tr>
+        <th>受付場所</th>
+        <td>正門入ってすぐ、植え込み前の屋外受付テント</td>
+      </tr>
+      <tr>
+        <th>来場者の種別</th>
+        <td>招待者　／　保護者<br><span style="font-size:9pt;color:#888;">※ 卒業生・中学生は紙での記入対応のため対象外</span></td>
+      </tr>
+      <tr>
+        <th>受付担当</th>
+        <td>文化祭実行委員　＋　<span class="tbd">先生の配置：調整中</span></td>
+      </tr>
+      <tr>
+        <th>使用端末</th>
+        <td>3台（招待者テント2台・保護者テント1台）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="section-title">役割・配置（案）</h3>
+  <table class="role-table">
+    <thead>
+      <tr>
+        <th>配置場所</th>
+        <th>担当</th>
+        <th>端末</th>
+        <th>主な役割</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="location">招待者テント</td>
+        <td>文化祭実行委員</td>
+        <td class="count">2台</td>
+        <td>QRスキャン・入場確認（来場者数が最多想定のため2列）</td>
+      </tr>
+      <tr>
+        <td class="location">保護者テント</td>
+        <td>文化祭実行委員</td>
+        <td class="count">1台</td>
+        <td>QRスキャン・入場確認</td>
+      </tr>
+      <tr>
+        <td class="location">統括・補助</td>
+        <td class="tbd">先生（調整中）</td>
+        <td class="count">―</td>
+        <td>全体監督・列整理・QR未取得者サポート</td>
+      </tr>
+      <tr>
+        <td class="location">システム管理</td>
+        <td>生徒会（1名）</td>
+        <td class="count">―</td>
+        <td>管理画面監視・ログ確認・緊急対応</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt;color:#999;background:#fdf9fa;border:1px solid #d8c0c5;padding:6px 12px;border-radius:4px;">
+    ※ 灰色斜体の欄は調整中。操作手順は追って実行委員向け説明会を開催します。
+  </p>
+</div>
+
+<!-- ===== P2: 当日フロー ===== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">2 / 3</div>
+    <h2>当日フロー</h2>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-section-title">【事前・梨花祭前日まで】ゲストへのQRコード発行</div>
+    <div class="flow-items">
+      <div class="flow-item">
+        <span class="actor student">生徒</span>
+        <span>システムページ（/student）にログインし、ゲストへの招待リンクを発行する</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor student">生徒</span>
+        <span>招待リンクをゲスト（保護者・招待者等）に送付する</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor guest">ゲスト</span>
+        <span>招待リンクを開き、氏名を登録してQRコードを取得・スマートフォンに保存する</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-section-title">【当日・開始前】スタッフ準備（〜9:00）</div>
+    <div class="flow-items">
+      <div class="flow-item">
+        <span class="actor iinkai">実行委員</span>
+        <span>各受付テントに長机・端末を設置し、スキャン画面（/admin/verify）を起動する</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor iinkai">実行委員</span>
+        <span>テスト用QRで動作確認後、各担当者が配置につく</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor iinkai">実行委員</span>
+        <span>三角コーンで来場者の待機列・誘導ルートを設置する</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-section-title">【受付時間中】来場者の入場フロー（9:00〜14:00）</div>
+    <div class="flow-items">
+      <div class="flow-item">
+        <span class="actor guest">ゲスト</span>
+        <span>正門から入場し、種別（招待者・保護者）に応じたテントの列に並ぶ</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor guest">ゲスト</span>
+        <span>受付テントにてスマートフォンのQRコードを提示する</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor iinkai">実行委員</span>
+        <span>端末でQRをスキャン → 画面にゲストの名前が表示されれば入場OK → 昇降口へ案内</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor system">システム</span>
+        <span>入場記録（氏名・時刻）が自動保存される。二重スキャンはシステムが弾く。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-section">
+    <div class="flow-section-title">【受付終了後】片付け・確認（14:00〜）</div>
+    <div class="flow-items">
+      <div class="flow-item">
+        <span class="actor iinkai">実行委員</span>
+        <span>端末・長机・三角コーンを回収・片付ける</span>
+      </div>
+      <div class="flow-item">
+        <span class="actor seito">生徒会</span>
+        <span>管理画面で入場ログを確認し、来場者数・異常がないかチェックする</span>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:9.5pt;color:#444;background:#fff3cd;padding:8px 14px;border-radius:4px;margin-top:6px;">
+    ※ QRを忘れた・保存できていないゲスト：生徒に招待リンクを再送してもらいその場で再取得。スマホ未持参の場合は手動記録で対応。
+  </p>
+</div>
+
+<!-- ===== P3: 緊急時対応 ＋ 説明会について ===== -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-num">3 / 3</div>
+    <h2>緊急時対応　／　実行委員向け説明会</h2>
+  </div>
+
+  <div class="emergency-box">
+    <h4>緊急時対応</h4>
+    <ul class="emergency-list">
+      <li><strong>QRが読み取れない：</strong>明るい場所でゲストに画面を開かせる。それでも読めない場合は手動で氏名を記録して入場許可</li>
+      <li><strong>端末が固まる・エラー：</strong>ブラウザを再読み込みする。回復しなければ補欠端末に交代</li>
+      <li><strong>ネットワーク障害：</strong>生徒会担当に報告。モバイルWi-Fiルーターに切り替え</li>
+      <li><strong>ゲストがQRを持っていない：</strong>生徒に招待リンクを再送してもらいその場でQR取得。急ぎの場合は手動記録で入場</li>
+      <li><strong>列が混雑する：</strong>招待者テントは2列対応のため柔軟に振り分け。補助スタッフが誘導</li>
+      <li><strong>「入場済み」エラーが出る：</strong>二重入場の可能性あり。生徒会システム担当に連絡し管理画面で確認</li>
+    </ul>
+  </div>
+
+  <div class="briefing-box">
+    <h4>実行委員向け説明会（追って開催）</h4>
+    <ul class="briefing-list">
+      <li>システムの操作手順（スキャン画面の起動・QR読み取り）の実演</li>
+      <li>当日の配置・担当テントの確認</li>
+      <li>端末・長机・三角コーンの設置・撤収手順の確認</li>
+      <li>緊急時対応フローの確認</li>
+      <li>質疑応答・実機練習</li>
+    </ul>
+  </div>
+
+  <p style="font-size:9pt;color:#888;margin-top:14px;text-align:right;">
+    梨花祭 入場管理システム 当日実行計画　令和8年　生徒会
+  </p>
+</div>
+
+</body>
+</html>

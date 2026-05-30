@@ -278,6 +278,16 @@
                                     <label class="form-label">カメラ選択</label>
                                     <select class="form-select" id="camera-select"></select>
                                     <button class="btn btn-primary mt-2" onclick="startQrScanner()">スキャン開始</button>
+                                    <div id="camera-filter-controls" style="display:none; margin-top:0.75rem;">
+                                        <div class="form-group" style="margin-bottom:0.25rem;">
+                                            <label class="form-label" style="margin-bottom:2px;">明るさ: <span id="brightness-value">100%</span></label>
+                                            <input type="range" id="brightness-slider" min="50" max="200" value="100" style="width:100%;" oninput="applyVideoFilter()">
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:0;">
+                                            <label class="form-label" style="margin-bottom:2px;">コントラスト: <span id="contrast-value">100%</span></label>
+                                            <input type="range" id="contrast-slider" min="50" max="200" value="100" style="width:100%;" oninput="applyVideoFilter()">
+                                        </div>
+                                    </div>
                                 </div>
                                 <div id="manual-input" class="form-group" style="display: none;">
                                     <label class="form-label">QRコードURL</label>
@@ -805,7 +815,9 @@
         const API_BASE_URL = ""; // 空文字列にして絶対パスにする
         const TOKEN_KEY = "jwtToken";
         const REFRESH_INTERVAL_MS = 5000; // 5秒
-        const NOTIFICATION_DISPLAY_TIME_MS = 3000; // 3秒
+        const NOTIFICATION_DISPLAY_TIME_MS = 3000; // 3秒（一般通知）
+        const NOTIFICATION_DISPLAY_SUCCESS_MS = 5000; // 入場完了通知：5秒
+        const NOTIFICATION_DISPLAY_ERROR_MS = 3000;   // エラー通知：3秒
 
         // グローバル変数 (最小限に)
         let html5QrCodeScanner;
@@ -1157,10 +1169,11 @@
             dom.checkinNotification.classList.add('is-visible');
 
             // 一定時間後にフェードアウト
+            const displayMs = isError ? NOTIFICATION_DISPLAY_ERROR_MS : NOTIFICATION_DISPLAY_SUCCESS_MS;
             dom.checkinNotification._hideTimer = setTimeout(() => {
                 dom.checkinNotification.classList.remove('is-visible');
                 dom.checkinNotification.classList.add('is-hiding');
-            }, NOTIFICATION_DISPLAY_TIME_MS);
+            }, displayMs);
         }
 
         // === QRコードスキャナー ===
@@ -1195,6 +1208,8 @@
         let _lastScannedAt = 0;
         const QR_COOLDOWN_SAME_MS = 3000;   // 同じQRコード: 3秒間は無視
         const QR_COOLDOWN_ANY_MS = 1500;    // 別のQRコードでも: 1.5秒間は無視
+        const SUCCESS_PAUSE_MS = 4000;      // 入場OK後のカメラ一時停止時間（ms）
+        let isProcessing = false;           // API処理中フラグ（二重スキャン防止）
 
         function startQrScanner() {
             // iOS等での音声再生制限解除（ユーザーアクション起点で一度再生する）
@@ -1223,8 +1238,9 @@
 
             html5QrCodeScanner.start(
                 { deviceId: { exact: cameraId } },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { fps: 10, qrbox: { width: 300, height: 300 } },
                 (decodedText, decodedResult) => {
+                    if (isProcessing) return;
                     const now = Date.now();
                     const isSame = decodedText === _lastScannedText;
                     const cooldown = isSame ? QR_COOLDOWN_SAME_MS : QR_COOLDOWN_ANY_MS;
@@ -1236,6 +1252,7 @@
 
                     _lastScannedText = decodedText;
                     _lastScannedAt = now;
+                    isProcessing = true;
 
                     console.log("QRコードスキャン成功:", decodedText);
                     verifyReservation(decodedText);
@@ -1244,11 +1261,22 @@
                     // エラーメッセージはコンソールにのみ出力し、UIには表示しない (連続スキャン中のノイズを避けるため)
                     // console.warn("QRスキャンエラー:", errorMessage);
                 }
-            ).catch(error => {
+            ).then(() => {
+                document.getElementById('camera-filter-controls').style.display = '';
+            }).catch(error => {
                 console.error("QRコードスキャン開始エラー:", error);
                 showNotification("QRコードのスキャン開始に失敗しました。", "error");
             });
             showNotification("QRコードスキャンを開始しました。", "info");
+        }
+
+        function applyVideoFilter() {
+            const b = document.getElementById('brightness-slider').value;
+            const c = document.getElementById('contrast-slider').value;
+            document.getElementById('brightness-value').textContent = b + '%';
+            document.getElementById('contrast-value').textContent = c + '%';
+            const video = document.querySelector('#qr-reader video');
+            if (video) video.style.filter = `brightness(${b}%) contrast(${c}%)`;
         }
 
         function verifyManualCode() {
@@ -1261,6 +1289,7 @@
         }
 
         async function verifyReservation(decodedText) {
+          try {
             let token = null;
             let reservationId = null;
             try {
@@ -1308,6 +1337,10 @@
                     showCheckinNotification('入場完了しました');
                     playSuccessSound();
                     updateReservations();
+                    html5QrCodeScanner.pause(true);
+                    setTimeout(() => {
+                        if (html5QrCodeScanner) html5QrCodeScanner.resume();
+                    }, SUCCESS_PAUSE_MS);
                 } else if (data.message === '既に入場済みです。') {
                     displayReservationDetails(data);
                     showCheckinNotification('既に入場済みです', true);
@@ -1325,6 +1358,9 @@
                 dom.scanResultDiv.innerHTML = `<strong>通信エラー:</strong> サーバーとの通信に失敗しました<br><button class="btn btn-outline" style="margin-top:0.6rem;font-size:0.82rem;padding:0.3rem 0.8rem;" onclick="retryVerification()">🔄 再試行</button>`;
                 playErrorSound();
             }
+          } finally {
+            isProcessing = false;
+          }
         }
 
         function retryVerification() {
