@@ -154,7 +154,7 @@
     font-size: 10pt;
   }
   .flow-item .actor {
-    min-width: 54px;
+    min-width: 58px;
     font-size: 8.5pt;
     font-weight: bold;
     color: #fff;
@@ -168,31 +168,9 @@
   }
   .flow-item .actor.guest   { background: #8a5020; }
   .flow-item .actor.student { background: #2a7a50; }
-  .flow-item .actor.staff   { background: #7a1a2a; }
-  .flow-item .actor.system  { background: #1a3a5c; }
-
-  /* ===== TIMELINE TABLE ===== */
-  .timeline-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0 0 14px 0;
-    font-size: 10pt;
-  }
-  .timeline-table th {
-    background: #7a1a2a;
-    color: #fff;
-    padding: 7px 12px;
-    text-align: center;
-    border: 1px solid #c08090;
-  }
-  .timeline-table td {
-    padding: 7px 12px;
-    border: 1px solid #d8c0c5;
-    vertical-align: top;
-  }
-  .timeline-table tr:nth-child(even) td { background: #f5ecee; }
-  .timeline-table td.time-col { font-weight: bold; color: #7a1a2a; white-space: nowrap; width: 20%; }
-  .timeline-table td.highlight { background: #fff3cd !important; }
+  .flow-item .actor.iinkai  { background: #7a1a2a; }
+  .flow-item .actor.seito   { background: #1a3a5c; }
+  .flow-item .actor.system  { background: #444; }
 
   /* ===== EMERGENCY BOX ===== */
   .emergency-box {
@@ -200,7 +178,7 @@
     border: 1px solid #e0a0a0;
     border-radius: 4px;
     padding: 10px 14px;
-    margin-top: 12px;
+    margin-bottom: 16px;
   }
   .emergency-box h4 {
     font-size: 10pt;
@@ -227,6 +205,36 @@
     font-size: 8pt;
     top: 6px;
   }
+
+  /* ===== BRIEFING BOX ===== */
+  .briefing-box {
+    background: #f5f8fb;
+    border: 1px solid #c0cfe0;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-top: 0;
+  }
+  .briefing-box h4 {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #1a3a5c;
+    margin-bottom: 6px;
+  }
+  .briefing-list {
+    list-style: none;
+    padding: 0;
+  }
+  .briefing-list li {
+    font-size: 10pt;
+    padding: 2px 0 2px 16px;
+    position: relative;
+  }
+  .briefing-list li::before {
+    content: "□";
+    position: absolute;
+    left: 0;
+    color: #1a3a5c;
+  }
 </style>
 </head>
 <body>
@@ -239,7 +247,7 @@
   </div>
   <div class="cover-line"></div>
   <div class="cover-meta">
-    担当：生徒会<br>
+    担当：文化祭実行委員・生徒会<br>
     実施日：令和8年7月17日（木）・18日（金）
   </div>
 </div>
@@ -264,19 +272,19 @@
       </tr>
       <tr>
         <th>受付場所</th>
-        <td>正門入ってすぐ、植え込み前の屋外受付テント（来場者種別ごとに分かれた列）</td>
+        <td>正門入ってすぐ、植え込み前の屋外受付テント</td>
       </tr>
       <tr>
         <th>来場者の種別</th>
-        <td>招待者　／　保護者　／　卒業生・中学生</td>
+        <td>招待者　／　保護者<br><span style="font-size:9pt;color:#888;">※ 卒業生・中学生は紙での記入対応のため対象外</span></td>
       </tr>
       <tr>
-        <th>担当スタッフ</th>
-        <td>生徒会生徒　＋　<span class="tbd">先生の配置：調整中</span>　＋　<span class="tbd">実行委員：参加可否調整中</span></td>
+        <th>受付担当</th>
+        <td>文化祭実行委員　＋　<span class="tbd">先生の配置：調整中</span></td>
       </tr>
       <tr>
         <th>使用端末</th>
-        <td>4台（各受付テントに分散配置）</td>
+        <td>3台（招待者テント2台・保護者テント1台）</td>
       </tr>
     </tbody>
   </table>
@@ -294,39 +302,33 @@
     <tbody>
       <tr>
         <td class="location">招待者テント</td>
-        <td>生徒会生徒</td>
+        <td>文化祭実行委員</td>
         <td class="count">2台</td>
-        <td>QRスキャン・入場確認（最多来場が想定されるため2列）</td>
+        <td>QRスキャン・入場確認（来場者数が最多想定のため2列）</td>
       </tr>
       <tr>
         <td class="location">保護者テント</td>
-        <td>生徒会生徒</td>
-        <td class="count">1台</td>
-        <td>QRスキャン・入場確認</td>
-      </tr>
-      <tr>
-        <td class="location">卒業生・中学生テント</td>
-        <td>生徒会生徒</td>
+        <td>文化祭実行委員</td>
         <td class="count">1台</td>
         <td>QRスキャン・入場確認</td>
       </tr>
       <tr>
         <td class="location">統括・補助</td>
-        <td class="tbd">先生・実行委員（調整中）</td>
+        <td class="tbd">先生（調整中）</td>
         <td class="count">―</td>
         <td>全体監督・列整理・QR未取得者サポート</td>
       </tr>
       <tr>
-        <td class="location">管理ページ担当</td>
+        <td class="location">システム管理</td>
         <td>生徒会（1名）</td>
         <td class="count">―</td>
-        <td>システム監視・ログ確認・緊急対応</td>
+        <td>管理画面監視・ログ確認・緊急対応</td>
       </tr>
     </tbody>
   </table>
 
   <p style="font-size:9pt;color:#999;background:#fdf9fa;border:1px solid #d8c0c5;padding:6px 12px;border-radius:4px;">
-    ※ 灰色斜体の欄は調整中。決定次第更新します。端末台数・配置は来場者数に応じて変更可。
+    ※ 灰色斜体の欄は調整中。操作手順は追って実行委員向け説明会を開催します。
   </p>
 </div>
 
@@ -359,15 +361,15 @@
     <div class="flow-section-title">【当日・開始前】スタッフ準備（7:30〜7:45）</div>
     <div class="flow-items">
       <div class="flow-item">
-        <span class="actor staff">生徒会</span>
+        <span class="actor iinkai">実行委員</span>
         <span>各受付テントに長机・端末を設置し、スキャン画面（/admin/verify）を起動する</span>
       </div>
       <div class="flow-item">
-        <span class="actor staff">生徒会</span>
+        <span class="actor iinkai">実行委員</span>
         <span>テスト用QRで動作確認後、各担当者が配置につく</span>
       </div>
       <div class="flow-item">
-        <span class="actor staff">生徒会</span>
+        <span class="actor iinkai">実行委員</span>
         <span>三角コーンで来場者の待機列・誘導ルートを設置する</span>
       </div>
     </div>
@@ -378,19 +380,19 @@
     <div class="flow-items">
       <div class="flow-item">
         <span class="actor guest">ゲスト</span>
-        <span>正門から入場し、種別（招待者・保護者・卒業生）に応じたテントの列に並ぶ</span>
+        <span>正門から入場し、種別（招待者・保護者）に応じたテントの列に並ぶ</span>
       </div>
       <div class="flow-item">
         <span class="actor guest">ゲスト</span>
         <span>受付テントにてスマートフォンのQRコードを提示する</span>
       </div>
       <div class="flow-item">
-        <span class="actor staff">生徒会</span>
+        <span class="actor iinkai">実行委員</span>
         <span>端末でQRをスキャン → 画面にゲストの名前が表示されれば入場OK → 昇降口へ案内</span>
       </div>
       <div class="flow-item">
         <span class="actor system">システム</span>
-        <span>入場記録（氏名・時刻・種別）が自動保存される。二重スキャンはシステムが弾く。</span>
+        <span>入場記録（氏名・時刻）が自動保存される。二重スキャンはシステムが弾く。</span>
       </div>
     </div>
   </div>
@@ -399,11 +401,11 @@
     <div class="flow-section-title">【受付終了後】片付け・確認（8:35〜）</div>
     <div class="flow-items">
       <div class="flow-item">
-        <span class="actor staff">生徒会</span>
+        <span class="actor iinkai">実行委員</span>
         <span>端末・長机・三角コーンを回収・片付ける</span>
       </div>
       <div class="flow-item">
-        <span class="actor staff">生徒会</span>
+        <span class="actor seito">生徒会</span>
         <span>管理画面で入場ログを確認し、来場者数・異常がないかチェックする</span>
       </div>
     </div>
@@ -414,57 +416,33 @@
   </p>
 </div>
 
-<!-- ===== P3: タイムライン ＋ 緊急時対応 ===== -->
+<!-- ===== P3: 緊急時対応 ＋ 説明会について ===== -->
 <div class="page">
   <div class="page-header">
     <div class="page-num">3 / 3</div>
-    <h2>タイムライン　／　緊急時対応</h2>
+    <h2>緊急時対応　／　実行委員向け説明会</h2>
   </div>
-
-  <table class="timeline-table">
-    <thead>
-      <tr>
-        <th>時刻</th>
-        <th>内容</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="time-col">〜7月16日</td>
-        <td>生徒が招待リンクをゲストに送付・QRコード発行完了</td>
-      </tr>
-      <tr>
-        <td class="time-col">7:30</td>
-        <td>スタッフ集合・各受付テント設置・端末動作確認・列整理用コーン設置</td>
-      </tr>
-      <tr>
-        <td class="time-col highlight">7:45</td>
-        <td class="highlight"><strong>ゲスト受付開始（正門開放）</strong></td>
-      </tr>
-      <tr>
-        <td class="time-col highlight">8:35</td>
-        <td class="highlight"><strong>ゲスト受付終了</strong></td>
-      </tr>
-      <tr>
-        <td class="time-col">8:35〜</td>
-        <td>端末・机・コーン回収、入場ログ確認、片付け</td>
-      </tr>
-      <tr>
-        <td class="time-col">梨花祭終了後</td>
-        <td>入場データのバックアップ・来場者数集計・振り返りまとめ</td>
-      </tr>
-    </tbody>
-  </table>
 
   <div class="emergency-box">
     <h4>緊急時対応</h4>
     <ul class="emergency-list">
       <li><strong>QRが読み取れない：</strong>明るい場所でゲストに画面を開かせる。それでも読めない場合は手動で氏名を記録して入場許可</li>
       <li><strong>端末が固まる・エラー：</strong>ブラウザを再読み込みする。回復しなければ補欠端末に交代</li>
-      <li><strong>ネットワーク障害：</strong>管理者に報告。モバイルWi-Fiルーターに切り替え</li>
+      <li><strong>ネットワーク障害：</strong>生徒会担当に報告。モバイルWi-Fiルーターに切り替え</li>
       <li><strong>ゲストがQRを持っていない：</strong>生徒に招待リンクを再送してもらいその場でQR取得。急ぎの場合は手動記録で入場</li>
-      <li><strong>列が混雑する：</strong>補助スタッフが誘導・整列。招待者テントは2列対応のため柔軟に振り分け</li>
-      <li><strong>「入場済み」エラーが出る：</strong>二重入場の可能性あり。管理者に連絡し管理画面で確認</li>
+      <li><strong>列が混雑する：</strong>招待者テントは2列対応のため柔軟に振り分け。補助スタッフが誘導</li>
+      <li><strong>「入場済み」エラーが出る：</strong>二重入場の可能性あり。生徒会システム担当に連絡し管理画面で確認</li>
+    </ul>
+  </div>
+
+  <div class="briefing-box">
+    <h4>実行委員向け説明会（追って開催）</h4>
+    <ul class="briefing-list">
+      <li>システムの操作手順（スキャン画面の起動・QR読み取り）の実演</li>
+      <li>当日の配置・担当テントの確認</li>
+      <li>端末・長机・三角コーンの設置・撤収手順の確認</li>
+      <li>緊急時対応フローの確認</li>
+      <li>質疑応答・実機練習</li>
     </ul>
   </div>
 
