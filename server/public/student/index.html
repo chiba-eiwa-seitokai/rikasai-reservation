@@ -326,6 +326,16 @@
                 招待枠をすべて使用しました。
             </p>
 
+            <!-- 枠の譲渡受け取りフォーム -->
+            <div style="margin-top:1.2rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.9rem 1rem;">
+                <p style="font-size:0.82rem; font-weight:600; color: var(--color-text-sub); margin-bottom:0.5rem;">🔁 枠の譲渡を受け取る</p>
+                <div style="display:flex; gap:0.5rem;">
+                    <input class="form-input" type="text" id="claim-code-input" placeholder="譲渡コード（例: A1B2C3D4）" style="flex:1; font-size:0.9rem; letter-spacing:0.05em; text-transform:uppercase;">
+                    <button class="btn btn-primary" style="width:auto; padding:0 1rem; white-space:nowrap;" onclick="claimSlot()">受け取る</button>
+                </div>
+                <p id="claim-error" style="display:none; color: var(--color-error); font-size:0.8rem; margin-top:0.4rem;"></p>
+            </div>
+
             <p style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--color-text-sub);">
                 ※ 招待リンクをゲストに送ってください。ゲストはリンクを開くだけで入場QRが表示されます。
             </p>
@@ -346,12 +356,27 @@
         </div>
     </div>
 
+    <!-- ゲスト名変更モーダル -->
+    <div id="edit-name-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-name-modal-title">
+        <div class="modal-container" style="width:360px; padding:1.5rem;">
+            <h3 id="edit-name-modal-title" style="margin:0 0 1rem; font-size:1rem; color:var(--color-text);">ゲスト名を変更</h3>
+            <input id="edit-name-input" class="form-input" type="text" maxlength="50" placeholder="新しいゲスト名" style="margin-bottom:0.75rem;">
+            <p id="edit-name-error" style="color:var(--color-error);font-size:0.82rem;margin-bottom:0.75rem;display:none;"></p>
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+                <button class="btn" style="background:var(--color-bg);color:var(--color-text-sub);" onclick="closeEditNameModal()">キャンセル</button>
+                <button class="btn btn-primary" id="edit-name-confirm-btn" onclick="confirmEditGuestName()">変更する</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let studentToken = localStorage.getItem('student_token') || '';
         let studentEmail = localStorage.getItem('student_email') || '';
         let maxSlots = 3;
         let currentTab = 'login'; // 'login' | 'register'
         let currentMessageTemplate = ''; // テンプレート保存用
+        let _editNameSlotId = null;
+        let _editNameCurrent = '';
 
         // ===== 初期化 =====
         window.addEventListener('DOMContentLoaded', () => {
@@ -567,7 +592,7 @@
                 div.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
                         <div class="slot-info">
-                            <div class="slot-name">${escHtml(slot.guest_name)} 様</div>
+                            <div class="slot-name">${slot.guest_name ? escHtml(slot.guest_name) + ' 様' : '<span style="color:#f59e0b;">⚠️ 名前未設定</span>'}</div>
                             <div class="slot-status ${slot.used ? 'used' : 'unused'}">
                                 ${slot.used ? '✅ 使用済み' : '⏳ 未使用'}
                             </div>
@@ -579,7 +604,15 @@
                                <button class="btn-copy" id="copy-btn-${i}" onclick="copyLink('${escHtml(url)}', ${i}, '${escHtml(slot.guest_name)}')">📋 コピー</button>
                                <button class="btn-copy btn-line" style="border:none;" onclick="shareLine('${escHtml(url)}', '${escHtml(slot.guest_name)}')">LINE送る</button>
                            </div>
-                           <button class="btn-copy" style="width:100%; margin-top:0.5rem; background: var(--color-bg); color: var(--color-primary); border: 1px dotted var(--color-primary); font-weight: 500;" onclick="downloadTicketImage('${escHtml(url)}', '${escHtml(slot.guest_name)}')">🎟️ チケット画像を保存</button>`
+                           <button class="btn-copy" style="width:100%; margin-top:0.5rem; background: var(--color-bg); color: var(--color-primary); border: 1px dotted var(--color-primary); font-weight: 500;" onclick="downloadTicketImage('${escHtml(url)}', '${escHtml(slot.guest_name)}')">🎟️ チケット画像を保存</button>
+                           ${slot.transfer_code
+                               ? `<div style="margin-top:0.5rem; background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                                      <span style="font-size:0.78rem; color:#92400e;">譲渡コード：</span>
+                                      <strong style="font-size:1rem; letter-spacing:0.1em; color:#78350f;">${slot.transfer_code}</strong>
+                                      <button class="btn-copy" style="margin-left:auto; padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="cancelTransfer('${slot.id}')">キャンセル</button>
+                                  </div>`
+                               : `<button class="btn-copy" style="width:100%; margin-top:0.5rem; background:var(--color-bg); color:#6b7280; border:1px dashed #d1d5db; font-size:0.8rem;" onclick="issueTransfer('${slot.id}')">🔁 譲渡コードを発行</button>`
+                           }`
                         : '<div style="background:#f3f4f6; color:#9ca3af; text-align:center; padding:0.5rem; border-radius:8px; font-size:0.8rem;">ご入場ありがとうございました</div>'
                     }
                 `;
@@ -638,30 +671,130 @@
             }
         }
 
-        // ===== 名前編集 =====
-        async function editGuestName(id, currentName) {
-            const newName = prompt('新しい名前を入力してください:', currentName);
-            if (newName !== null && newName.trim() !== '' && newName !== currentName) {
-                try {
-                    const res = await fetch(`/api/student/guest-slots/${id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${studentToken}`
-                        },
-                        body: JSON.stringify({ guest_name: newName.trim() })
-                    });
-                    const data = await res.json();
-
-                    if (res.ok) {
-                        showNotification('名前を変更しました', 'success');
-                        await loadDashboard();
-                    } else {
-                        showNotification(data.message || '更新に失敗しました。', 'error');
-                    }
-                } catch (e) {
-                    showNotification('サーバーエラーが発生しました。', 'error');
+        // ===== 枠の譲渡 =====
+        async function issueTransfer(slotId) {
+            if (!confirm('この枠の譲渡コードを発行しますか？\nコードを受け取った人がこの枠を使えるようになります。')) return;
+            try {
+                const res = await fetch(`/api/student/guest-slots/${slotId}/transfer`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${studentToken}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showNotification(`譲渡コード「${data.transfer_code}」を発行しました`, 'success');
+                    await loadDashboard();
+                } else {
+                    showNotification(data.message || '発行に失敗しました', 'error');
                 }
+            } catch (e) {
+                showNotification('通信エラーが発生しました', 'error');
+            }
+        }
+
+        async function cancelTransfer(slotId) {
+            if (!confirm('譲渡コードをキャンセルしますか？')) return;
+            try {
+                const res = await fetch(`/api/student/guest-slots/${slotId}/transfer`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${studentToken}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showNotification('譲渡をキャンセルしました', 'success');
+                    await loadDashboard();
+                } else {
+                    showNotification(data.message || 'キャンセルに失敗しました', 'error');
+                }
+            } catch (e) {
+                showNotification('通信エラーが発生しました', 'error');
+            }
+        }
+
+        async function claimSlot() {
+            const code = document.getElementById('claim-code-input').value.trim().toUpperCase();
+            const errEl = document.getElementById('claim-error');
+            errEl.style.display = 'none';
+            if (!code) { errEl.textContent = '譲渡コードを入力してください。'; errEl.style.display = 'block'; return; }
+            try {
+                const res = await fetch('/api/student/claim-slot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${studentToken}` },
+                    body: JSON.stringify({ transfer_code: code })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('claim-code-input').value = '';
+                    showNotification('枠を受け取りました！ゲストの名前を設定してください', 'success');
+                    await loadDashboard();
+                } else {
+                    errEl.textContent = data.message || '受け取りに失敗しました。';
+                    errEl.style.display = 'block';
+                }
+            } catch (e) {
+                errEl.textContent = 'サーバーとの通信に失敗しました。';
+                errEl.style.display = 'block';
+            }
+        }
+
+        // ===== 名前編集 =====
+        function editGuestName(id, currentName) {
+            _editNameSlotId = id;
+            _editNameCurrent = currentName;
+            const input = document.getElementById('edit-name-input');
+            const errEl = document.getElementById('edit-name-error');
+            input.value = currentName;
+            errEl.style.display = 'none';
+            document.getElementById('edit-name-modal').classList.add('is-active');
+            setTimeout(() => { input.focus(); input.select(); }, 50);
+        }
+
+        function closeEditNameModal() {
+            document.getElementById('edit-name-modal').classList.remove('is-active');
+            _editNameSlotId = null;
+        }
+
+        async function confirmEditGuestName() {
+            const input = document.getElementById('edit-name-input');
+            const errEl = document.getElementById('edit-name-error');
+            const btn = document.getElementById('edit-name-confirm-btn');
+            const newName = input.value.trim();
+
+            if (!newName) {
+                errEl.textContent = '名前を入力してください。';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (newName === _editNameCurrent) {
+                closeEditNameModal();
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '更新中...';
+            try {
+                const res = await fetch(`/api/student/guest-slots/${_editNameSlotId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${studentToken}`
+                    },
+                    body: JSON.stringify({ guest_name: newName })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    closeEditNameModal();
+                    showNotification('名前を変更しました', 'success');
+                    await loadDashboard();
+                } else {
+                    errEl.textContent = data.message || '更新に失敗しました。';
+                    errEl.style.display = 'block';
+                }
+            } catch (e) {
+                errEl.textContent = 'サーバーエラーが発生しました。';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '変更する';
             }
         }
 
@@ -795,7 +928,7 @@
                 ctx.fillText('当日はこのQRコードをご提示ください', 400, cardY + 740);
 
                 ctx.font = '24px "Noto Sans JP", sans-serif';
-                ctx.fillText('開催日: 2026年6月◯日（土）9:00〜14:00', 400, cardY + 810);
+                ctx.fillText('開催日: 2026年7月17日（金）・18日（土）9:00〜14:00', 400, cardY + 810);
                 ctx.fillText('場所: 千葉英和高等学校', 400, cardY + 860);
 
                 // 注意書き
@@ -824,6 +957,12 @@
         function closeTicketModal() {
             document.getElementById('ticket-modal').classList.remove('is-active');
         }
+
+        // Enterキーでゲスト名変更モーダルを確定、Escapeで閉じる
+        document.getElementById('edit-name-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirmEditGuestName();
+            else if (e.key === 'Escape') closeEditNameModal();
+        });
 
         // ===== ユーティリティ =====
         function showNotification(message, type = 'success') {

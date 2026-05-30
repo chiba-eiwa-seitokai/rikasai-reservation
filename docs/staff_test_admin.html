@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>管理者向けセットアップ手順</title>
+<style>
+  @page { size: A4; margin: 10mm 14mm 10mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    background: #fff;
+    width: 100%;
+  }
+
+  /* HEADER */
+  .hdr { width:100%; border-bottom:3px solid #5c1a1a; margin-bottom:8px; padding-bottom:7px; }
+  .hdr td { vertical-align:top; }
+  .hdr .right { text-align:right; font-size:8.5pt; color:#666; line-height:1.8; white-space:nowrap; }
+  h1 { font-size:14pt; font-weight:bold; color:#5c1a1a; line-height:1.3; }
+  .sub { font-size:8.5pt; color:#555; margin-top:2px; }
+
+  /* NOTICE */
+  .notice { background:#fdecea; border:1.5px solid #e57373; border-radius:5px; padding:6px 10px; font-size:8.5pt; margin-bottom:8px; }
+
+  /* SECTION LABEL */
+  .sec-label { font-size:9pt; font-weight:bold; color:#5c1a1a; border-left:4px solid #5c1a1a; padding-left:7px; margin-bottom:6px; margin-top:10px; }
+
+  /* CHECKLIST */
+  .checklist { width:100%; border-collapse:collapse; margin-bottom:8px; font-size:8.5pt; }
+  .checklist th { background:#5c1a1a; color:#fff; padding:5px 10px; text-align:left; font-size:8.5pt; }
+  .checklist td { border:1px solid #e0c0c0; padding:5px 8px; vertical-align:top; }
+  .checklist tr:nth-child(even) td { background:#fdf5f5; }
+  .checklist .cb { width:18px; text-align:center; padding:5px 4px; }
+  .checklist .tag { display:inline-block; background:#5c1a1a; color:#fff; font-size:7pt; padding:1px 6px; border-radius:8px; white-space:nowrap; }
+  .checklist .tag.green { background:#1a5c2a; }
+  .checklist .tag.blue  { background:#1a3a5c; }
+
+  /* INFO BOX */
+  .info-box { background:#fdf5f5; border:1.5px solid #e0b0b0; border-radius:6px; padding:8px 12px; margin-bottom:8px; font-size:8.5pt; }
+  .info-box table { border-collapse:collapse; }
+  .info-box td { padding:2px 10px 2px 0; vertical-align:top; }
+  .info-box .lbl { color:#555; white-space:nowrap; }
+  .info-box .val { font-weight:bold; color:#5c1a1a; font-size:9.5pt; }
+  .url-box { background:#f7eded; border:1px solid #e0b0b0; border-radius:3px; padding:3px 8px; font-size:8pt; color:#5c1a1a; font-weight:bold; margin:3px 0; }
+
+  /* TIMELINE */
+  .tl { border-left:3px solid #e0b0b0; padding-left:12px; margin-bottom:8px; }
+  .tl-item { margin-bottom:8px; position:relative; }
+  .tl-item::before { content:'●'; position:absolute; left:-16px; color:#5c1a1a; font-size:8pt; top:1px; }
+  .tl-time { font-weight:bold; font-size:8.5pt; color:#5c1a1a; }
+  .tl-desc { font-size:8.5pt; color:#333; margin-top:1px; }
+  .tl-sub { font-size:7.5pt; color:#666; margin-top:1px; }
+
+  /* TABLE */
+  .dtbl { width:100%; border-collapse:collapse; font-size:8.5pt; margin-bottom:8px; }
+  .dtbl th { background:#5c1a1a; color:#fff; padding:5px 8px; text-align:left; }
+  .dtbl td { border:1px solid #e0c0c0; padding:5px 8px; vertical-align:top; }
+  .dtbl tr:nth-child(even) td { background:#fdf5f5; }
+
+  .hint { font-size:7.5pt; color:#666; margin-top:2px; }
+  .em { background:#fff3cd; padding:1px 5px; border-radius:3px; font-weight:bold; color:#7a5000; }
+
+  /* FOOTER */
+  .footer { border-top:1px solid #ccc; padding-top:5px; width:100%; font-size:7.5pt; color:#888; margin-top:8px; }
+  .footer td:last-child { text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<table class="hdr">
+  <tr>
+    <td>
+      <h1>管理者向けセットアップ手順</h1>
+      <div class="sub">梨花祭2026 入場管理システム 運営テスト</div>
+    </td>
+    <td class="right">梨花祭実行委員会<br>2026年　　月　　日</td>
+  </tr>
+</table>
+
+<div class="notice">🔑 このマニュアルは<strong>管理者（1〜2名）専用</strong>です。<br>
+管理者アカウント情報が含まれています。他の人には見せないようにしてください。</div>
+
+<!-- 管理者ログイン情報 -->
+<div class="sec-label" style="margin-top:4px;">管理者ログイン情報</div>
+<div class="info-box">
+  <div class="url-box">rikasai-reservation.vercel.app/admin</div>
+  <table style="margin-top:6px;">
+    <tr>
+      <td class="lbl">ユーザー名：</td>
+      <td class="val">admin</td>
+    </tr>
+    <tr>
+      <td class="lbl">パスワード：</td>
+      <td class="val">rikasai123</td>
+    </tr>
+  </table>
+  <p class="hint" style="margin-top:4px;">※ パスワードは「⚙️ 設定」→「パスワード変更」から変更を推奨</p>
+</div>
+
+<!-- 事前準備チェックリスト -->
+<div class="sec-label">当日集合前に済ませること（事前準備チェックリスト）</div>
+<table class="checklist">
+  <tr>
+    <th class="cb">✓</th>
+    <th>作業内容</th>
+    <th style="width:35%;">場所・手順</th>
+  </tr>
+  <tr>
+    <td class="cb"><div style="width:14px;height:14px;border:1.5px solid #aaa;border-radius:2px;"></div></td>
+    <td><span class="tag">必須</span>　受付スキャン担当アカウントを作成する（2〜3名分）</td>
+    <td>「⚙️ 設定」→「アカウント管理」→「新規アカウント作成」<br>ロールは <em>reception</em> を選ぶ</td>
+  </tr>
+  <tr>
+    <td class="cb"><div style="width:14px;height:14px;border:1.5px solid #aaa;border-radius:2px;"></div></td>
+    <td><span class="tag">必須</span>　受付担当者にユーザー名・パスワードを伝える</td>
+    <td>受付担当向けマニュアル（別紙）の空欄に書き込んで渡す</td>
+  </tr>
+  <tr>
+    <td class="cb"><div style="width:14px;height:14px;border:1.5px solid #aaa;border-radius:2px;"></div></td>
+    <td><span class="tag blue">確認</span>　テストモード（固定OTP）が<strong>OFF</strong>になっているか確認</td>
+    <td>「🧪 実験・テスト」タブ → 「固定OTPモード」がOFFであること</td>
+  </tr>
+  <tr>
+    <td class="cb"><div style="width:14px;height:14px;border:1.5px solid #aaa;border-radius:2px;"></div></td>
+    <td><span class="tag blue">確認</span>　システムにアクセスできるか動作確認</td>
+    <td><em>rikasai-reservation.vercel.app</em> が開けるか</td>
+  </tr>
+</table>
+
+<!-- 当日のタイムライン -->
+<div class="sec-label">テスト当日の管理者タスク（進行タイムライン）</div>
+<div class="tl">
+  <div class="tl-item">
+    <div class="tl-time">▶ 開始前（集合したら）</div>
+    <div class="tl-desc">受付スキャン担当（2〜3名）に端末・マニュアルを渡す。<br>
+    グループ分け（A/B/C：各10名）を発表する。</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-time">▶ PHASE 1 開始の合図を出す</div>
+    <div class="tl-desc">「グループA、始めてください」と声をかける。<br>
+    グループAがSTEP 3（ログイン）に進んだのを確認したらグループBを、<br>
+    グループBが進んだらグループCを開始させる。</div>
+    <div class="tl-sub">※ 一斉に30人がOTPを送ると少し混み合うため、10人ずつずらす</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-time">▶ PHASE 2 中：困っている人をサポート</div>
+    <div class="tl-desc">OTPが届かない・ログインできない場合は個別対応する（トラブル対応表を参照）。</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-time">▶ PHASE 3 中：ダッシュボードでリアルタイム確認</div>
+    <div class="tl-desc">「🎫 ゲスト一覧」タブで入場済み件数が増えていくのをリアルタイムで確認。<br>
+    スキャンが詰まっていないか注視する。</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-time">▶ PHASE 4：全員の結果を確認・フィードバック</div>
+    <div class="tl-desc">「📊 レポート」タブを全員に見せる。チェックイン率・時間帯グラフを確認。</div>
+  </div>
+</div>
+
+<!-- テスト後のデータ扱い -->
+<div class="sec-label">テスト終了後のデータ扱い</div>
+<table class="dtbl">
+  <tr>
+    <th>データの種類</th>
+    <th>推奨対応</th>
+    <th>操作場所</th>
+  </tr>
+  <tr>
+    <td>各スタッフの生徒アカウント</td>
+    <td><strong>そのまま残す</strong>（本番でも使う）</td>
+    <td>操作不要</td>
+  </tr>
+  <tr>
+    <td>テスト用に発行した招待枠（「テスト」「本人」など）</td>
+    <td>本番前に削除 or そのまま（1枠消費扱い）</td>
+    <td>「👨‍🏫 生徒管理」→生徒名をクリック→スロット削除</td>
+  </tr>
+  <tr>
+    <td>チェックイン済みフラグ</td>
+    <td>削除かチェックイン取り消しで処理</td>
+    <td>「🎫 ゲスト一覧」→「取消」ボタン<br>or 招待枠ごと削除</td>
+  </tr>
+  <tr>
+    <td>受付スキャン担当アカウント</td>
+    <td><strong>そのまま残す</strong>（本番でも使う）</td>
+    <td>操作不要</td>
+  </tr>
+</table>
+
+<!-- トラブル対応表 -->
+<div class="sec-label">管理者向けトラブル対応表</div>
+<table class="dtbl">
+  <tr>
+    <th>症状</th>
+    <th>原因・対処</th>
+  </tr>
+  <tr>
+    <td>「このメールアドレスで登録されたアカウントが見つかりません」</td>
+    <td>「新規登録」タブで登録していないまま「ログイン」タブを使っている。新規登録から始めるよう案内。</td>
+  </tr>
+  <tr>
+    <td>OTPが届かない（5分以上）</td>
+    <td>迷惑メール確認→「再送信」を試させる。それでもダメなら管理者が「👨‍🏫 生徒管理」でアカウントを確認し、必要なら削除して再登録させる。</td>
+  </tr>
+  <tr>
+    <td>「招待枠の上限に達しています」</td>
+    <td>「👨‍🏫 生徒管理」→該当生徒を選択→「枠数を変更」で上限を増やすか、既存のスロットを削除する。</td>
+  </tr>
+  <tr>
+    <td>チェックインが取り消したい</td>
+    <td>「🎫 ゲスト一覧」→該当スロットの「取消」ボタンで入場済みフラグをリセットできる。</td>
+  </tr>
+  <tr>
+    <td>管理者パスワードを忘れた</td>
+    <td>サーバーに直接アクセスし、DBの users テーブルをリセット。詳細は system_manual.md の「エラー5」参照。</td>
+  </tr>
+</table>
+
+<!-- FOOTER -->
+<table class="footer">
+  <tr>
+    <td>梨花祭2026 管理者向けセットアップ手順【取り扱い注意】</td>
+    <td>梨花祭実行委員会</td>
+  </tr>
+</table>
+
+</body>
+</html>

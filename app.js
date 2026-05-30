@@ -94,7 +94,8 @@ app.use(express.static(path.join(__dirname, 'server/public')));
 // DB initialization (PostgreSQL)
 const { sequelize, User, Student, GuestSlot, Op, decrypt, decryptDeterministic, encrypt, encryptDeterministic } = require('./server/db-postgres');
 
-// テスト用グローバル設定
+// テスト用グローバル設定（本番環境では常に無効）
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 let isFixedOtpMode = false;
 const TEST_FIXED_OTP = '123456';
 
@@ -102,10 +103,14 @@ const TEST_FIXED_OTP = '123456';
 sequelize.sync({ alter: true })
     .then(async () => {
         console.log('Database synced (PostgreSQL)');
+        // 譲渡カラムのマイグレーション（syncが追加しない場合の保険）
+        try {
+            await sequelize.query(`ALTER TABLE "GuestSlots" ADD COLUMN IF NOT EXISTS "transfer_code" VARCHAR(8)`);
+            await sequelize.query(`ALTER TABLE "GuestSlots" ADD COLUMN IF NOT EXISTS "transfer_expires_at" TIMESTAMPTZ`);
+        } catch(e) { console.error('Transfer columns migration error:', e.message); }
         // 初期ユーザーの作成 (開発用、本番では別途管理)
         const adminUser = await User.findOne({ where: { username: 'admin' } });
         if (!adminUser) {
-            // パスワードハッシュ化は残すが、JSON DBに保存
             const hashedPassword = await bcrypt.hash('rikasai123', 10);
             await User.create({ username: 'admin', password: hashedPassword, role: 'admin' });
             console.log('Admin user created');
@@ -532,6 +537,9 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         const student = await Student.findOne({ where: { id: req.params.id } });
         if (!student) return res.status(404).json({ message: '生徒が見つかりません。' });
@@ -543,7 +551,7 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
             token,
             student_email: student.email,
             student_name: student.name,
-            guest_name: guest_name.trim(), // assuming sanitization is done elsewhere or we don't strictly require escapeHtml since it's admin
+            guest_name: escapeHtml(guest_name.trim()),
             used: false
         });
 
@@ -558,11 +566,14 @@ app.put('/api/admin/guest-slots/:id', authenticateToken, authorizeRole(['admin']
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         const slot = await GuestSlot.findOne({ where: { id: req.params.id } });
         if (!slot) return res.status(404).json({ message: '指定された招待枠が見つかりません。' });
 
-        await GuestSlot.update({ guest_name: guest_name.trim() }, { where: { id: req.params.id } });
+        await GuestSlot.update({ guest_name: escapeHtml(guest_name.trim()) }, { where: { id: req.params.id } });
         res.json({ message: 'ゲスト名を更新しました。' });
     } catch (error) { next(error); }
 });
@@ -680,8 +691,12 @@ app.get('/api/export-report', authenticateToken, authorizeRole(['admin']), async
     res.status(404).json({ message: 'This endpoint is deprecated.' });
 });
 
-// ===== テスト支援機能 API (管理者のみ) =====
+// ===== テスト支援機能 API (管理者のみ・本番環境では無効) =====
 
+app.use('/api/admin/test', (req, res, next) => {
+    if (IS_PRODUCTION) return res.status(403).json({ message: 'テスト機能は本番環境では無効です。' });
+    next();
+});
 
 // データ削除
 app.post('/api/admin/test/clear', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
@@ -914,9 +929,9 @@ app.post('/api/student/verify-otp', loginLimiter, [
         const { email, otp } = req.body;
         const normalizedEmail = email.trim().toLowerCase();
 
-        // テストモード（全体）またはテスト用アカウントの判定
-        const isTestAccount = normalizedEmail.startsWith('test_student_');
-        const effectiveOtp = (isFixedOtpMode || isTestAccount) ? TEST_FIXED_OTP : null;
+        // テストモード（全体）またはテスト用アカウントの判定（本番では無効）
+        const isTestAccount = !IS_PRODUCTION && normalizedEmail.startsWith('test_student_');
+        const effectiveOtp = (!IS_PRODUCTION && (isFixedOtpMode || isTestAccount)) ? TEST_FIXED_OTP : null;
 
         const student = await Student.findOne({ where: { email: encryptDeterministic(normalizedEmail) } });
 
@@ -970,14 +985,18 @@ app.get('/api/student/dashboard', authenticateStudent, async (req, res, next) =>
         const student = await Student.findOne({ where: { email: encryptDeterministic(req.student.email) } });
         const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : GUEST_SLOTS_PER_STUDENT;
 
-        const slots = await GuestSlot.findAll({ where: { student_email: encryptDeterministic(req.student.email) } });
-        // ゲスト個人情報は返さない: token, used, guest_name のみ
-        const safeSlots = slots.map(s => ({
+        const [slotsRaw] = await sequelize.query(
+            `SELECT "id", "token", "guest_name", "used", "createdAt", "transfer_code", "transfer_expires_at" FROM "GuestSlots" WHERE "student_email" = :email`,
+            { replacements: { email: encryptDeterministic(req.student.email) } }
+        );
+        const safeSlots = slotsRaw.map(s => ({
             id: s.id,
             token: s.token,
-            guest_name: s.guest_name,
+            guest_name: decrypt(s.guest_name),
             used: s.used,
-            createdAt: s.createdAt
+            createdAt: s.createdAt,
+            transfer_code: s.transfer_code || null,
+            transfer_expires_at: s.transfer_expires_at || null
         }));
         res.json({
             name: req.student.name,
@@ -1013,7 +1032,7 @@ app.put('/api/student/message-template', authenticateStudent, [
 
 // 招待リンク生成（ゲスト名を生徒が入力）
 app.post('/api/student/generate-links', authenticateStudent, [
-    body('guest_name').isString().trim().notEmpty().withMessage('ゲストの名前は必須です')
+    body('guest_name').isString().trim().notEmpty().withMessage('ゲストの名前は必須です').isLength({ max: 50 }).withMessage('ゲストの名前は50文字以内で入力してください')
 ], async (req, res, next) => {
     try {
         const errors = validationResult(req);
@@ -1066,6 +1085,9 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
         if (!guest_name || guest_name.trim() === '') {
             return res.status(400).json({ message: '名前を入力してください。' });
         }
+        if (guest_name.trim().length > 50) {
+            return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
+        }
 
         // 当日判定 (環境変数でカンマ区切りの日付指定を対応)
         const festivalDatesStr = process.env.FESTIVAL_DATES || '2026-07-17,2026-07-18';
@@ -1094,6 +1116,86 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
     } catch (error) {
         next(error);
     }
+});
+
+// ===== 招待枠 譲渡 =====
+
+// 譲渡コード発行
+app.post('/api/student/guest-slots/:id/transfer', authenticateStudent, async (req, res, next) => {
+    try {
+        const slot = await GuestSlot.findOne({ where: { id: req.params.id, student_email: encryptDeterministic(req.student.email) } });
+        if (!slot) return res.status(404).json({ message: '招待枠が見つかりません。' });
+        if (slot.used) return res.status(400).json({ message: '使用済みの枠は譲渡できません。' });
+
+        const transfer_code = crypto.randomBytes(4).toString('hex').toUpperCase();
+        const transfer_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await sequelize.query(
+            `UPDATE "GuestSlots" SET "transfer_code" = :code, "transfer_expires_at" = :exp WHERE "id" = :id`,
+            { replacements: { code: transfer_code, exp: transfer_expires_at, id: req.params.id } }
+        );
+        res.json({ transfer_code, expires_at: transfer_expires_at });
+    } catch (error) { next(error); }
+});
+
+// 譲渡コードキャンセル
+app.delete('/api/student/guest-slots/:id/transfer', authenticateStudent, async (req, res, next) => {
+    try {
+        const slot = await GuestSlot.findOne({ where: { id: req.params.id, student_email: encryptDeterministic(req.student.email) } });
+        if (!slot) return res.status(404).json({ message: '招待枠が見つかりません。' });
+        await sequelize.query(
+            `UPDATE "GuestSlots" SET "transfer_code" = NULL, "transfer_expires_at" = NULL WHERE "id" = :id`,
+            { replacements: { id: req.params.id } }
+        );
+        res.json({ message: '譲渡をキャンセルしました。' });
+    } catch (error) { next(error); }
+});
+
+// 譲渡コードで枠を受け取る
+app.post('/api/student/claim-slot', authenticateStudent, [
+    body('transfer_code').isString().trim().notEmpty().withMessage('譲渡コードを入力してください')
+], async (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+        const code = req.body.transfer_code.trim().toUpperCase();
+        const [rows] = await sequelize.query(
+            `SELECT * FROM "GuestSlots" WHERE "transfer_code" = :code LIMIT 1`,
+            { replacements: { code } }
+        );
+        const row = rows[0];
+
+        if (!row) return res.status(404).json({ message: '譲渡コードが見つかりません。' });
+        if (row.used) return res.status(400).json({ message: 'この枠は既に使用済みです。' });
+        if (!row.transfer_expires_at || new Date() > new Date(row.transfer_expires_at)) {
+            return res.status(400).json({ message: '譲渡コードの有効期限が切れています。' });
+        }
+        if (decryptDeterministic(row.student_email) === req.student.email) {
+            return res.status(400).json({ message: '自分の枠は受け取れません。' });
+        }
+
+        const newToken = crypto.randomBytes(24).toString('hex');
+        await sequelize.query(
+            `UPDATE "GuestSlots" SET "student_email" = :email, "student_name" = :name, "guest_name" = :gname, "token" = :token, "transfer_code" = NULL, "transfer_expires_at" = NULL WHERE "id" = :id`,
+            { replacements: {
+                email: encryptDeterministic(req.student.email),
+                name: encrypt(req.student.name),
+                gname: encrypt('（名前未設定）'),
+                token: newToken,
+                id: row.id
+            }}
+        );
+
+        const baseUrl = process.env.FRONTEND_URL || `http://localhost:${port}`;
+        res.json({
+            message: '招待枠を受け取りました。ゲストの名前を設定してください。',
+            id: row.id,
+            token: newToken,
+            guest_name: '（名前未設定）',
+            used: false,
+            invite_url: `${baseUrl}/?token=${newToken}`
+        });
+    } catch (error) { next(error); }
 });
 
 // ===== ゲスト入場QR =====

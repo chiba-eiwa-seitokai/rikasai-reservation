@@ -206,7 +206,7 @@ const GuestSlot = sequelize.define('GuestSlot', {
         defaultValue: false
     },
     checked_in_at: {
-        type: DataTypes.DATE, // db-local では ISO string
+        type: DataTypes.DATE,
         allowNull: true
     }
 });
