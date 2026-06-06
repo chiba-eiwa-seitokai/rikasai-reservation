@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>実証実験 生徒向け説明 — 千葉英和高校 生徒会</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1a3a5c;
+  --navy2: #2a5a8c;
+  --accent: #e84f7d;
+  --green: #27ae60;
+  --amber: #f59e0b;
+  --white: #ffffff;
+  --bg: #f0f4f8;
+  --text: #1a1a1a;
+  --sub: #555;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  background: #111;
+}
+
+/* ── Deck ── */
+.deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Slides ── */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  background: #fff;
+}
+.slide.active { display: flex; }
+
+/* ── Cover ── */
+.slide-cover {
+  background: linear-gradient(150deg, #1a3a5c 0%, #2a5a8c 55%, #1a6a8c 100%);
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 5vh 10vw;
+}
+.cover-tag {
+  border: 1px solid rgba(255,255,255,.5);
+  border-radius: 20px;
+  padding: 6px 28px;
+  font-size: clamp(0.9rem, 1.8vw, 1.2rem);
+  letter-spacing: .1em;
+  margin-bottom: 3vh;
+  opacity: .85;
+}
+.cover-title {
+  font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+  font-weight: bold;
+  line-height: 1.25;
+  margin-bottom: 2vh;
+}
+.cover-sub {
+  font-size: clamp(1rem, 2.5vw, 1.6rem);
+  opacity: .8;
+  margin-bottom: 3vh;
+}
+.cover-date {
+  font-size: clamp(1.1rem, 2.8vw, 1.8rem);
+  font-weight: bold;
+  background: rgba(255,255,255,.15);
+  border-radius: 10px;
+  padding: 14px 36px;
+  display: inline-block;
+}
+
+/* ── Slide header band ── */
+.band {
+  background: var(--navy);
+  color: #fff;
+  padding: 16px 5vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: 68px;
+}
+.band h2 { font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: bold; }
+.band-num { font-size: .9rem; opacity: .55; }
+
+/* ── Slide body ── */
+.body {
+  flex: 1;
+  padding: 3vh 5vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ── Lead text ── */
+.lead {
+  font-size: clamp(1.1rem, 2.2vw, 1.5rem);
+  line-height: 1.65;
+  color: var(--text);
+  margin-bottom: 2vh;
+}
+
+/* ── 3-column grid ── */
+.g3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.g2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ── Card ── */
+.card {
+  background: #f4f8fc;
+  border: 2px solid #c0d4e8;
+  border-radius: 12px;
+  padding: clamp(14px, 2vw, 24px);
+  text-align: center;
+}
+.card-icon { font-size: clamp(1.8rem, 3.5vw, 2.8rem); margin-bottom: 8px; display: block; }
+.card-title { font-size: clamp(.9rem, 1.8vw, 1.15rem); font-weight: bold; color: var(--navy); margin-bottom: 6px; }
+.card-text  { font-size: clamp(.8rem, 1.5vw, 1rem); color: var(--sub); line-height: 1.55; }
+
+/* ── Step list ── */
+.steps { list-style: none; margin-top: 2vh; }
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: clamp(12px, 2vh, 20px);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  line-height: 1.5;
+}
+.step-n {
+  background: var(--navy);
+  color: #fff;
+  width: clamp(28px, 3vw, 40px);
+  height: clamp(28px, 3vw, 40px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: clamp(.85rem, 1.5vw, 1.05rem);
+  flex-shrink: 0;
+}
+.step-hint { font-size: clamp(.75rem, 1.3vw, .9rem); color: var(--sub); display: block; margin-top: 2px; }
+
+/* ── URL box ── */
+.url-box {
+  background: var(--navy);
+  color: #fff;
+  border-radius: 10px;
+  padding: clamp(12px, 2vh, 20px) 32px;
+  font-size: clamp(1.2rem, 2.8vw, 2rem);
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: .02em;
+  margin: 2vh 0;
+}
+
+/* ── Highlight span ── */
+.hl {
+  background: #fff3cd;
+  color: #7a5000;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* ── Timeline ── */
+.tl { display: flex; flex-direction: column; gap: 12px; margin-top: 2vh; }
+.tl-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #f4f8fc;
+  border-left: 5px solid var(--navy);
+  border-radius: 0 10px 10px 0;
+  padding: clamp(10px, 1.8vh, 16px) clamp(14px, 2vw, 24px);
+  font-size: clamp(.95rem, 1.8vw, 1.2rem);
+}
+.tl-row.accent { background: #fff8e1; border-left-color: var(--amber); }
+.tl-date { font-weight: bold; color: var(--navy); min-width: clamp(120px, 16vw, 180px); }
+.tl-row.accent .tl-date { color: #7a5000; }
+
+/* ── Flow ── */
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2.5vh;
+  flex-wrap: nowrap;
+}
+.fbox {
+  background: #f4f8fc;
+  border: 2px solid #c0d4e8;
+  border-radius: 10px;
+  padding: clamp(10px, 1.8vh, 18px) clamp(12px, 1.5vw, 20px);
+  text-align: center;
+  flex: 1;
+}
+.fbox.ok { background: #e8f7ed; border-color: #7dd3a8; }
+.fbox.ng { background: #fef2f2; border-color: #fca5a5; }
+.f-label { font-size: clamp(.7rem, 1.2vw, .85rem); color: var(--sub); margin-bottom: 4px; }
+.f-main  { font-size: clamp(.9rem, 1.8vw, 1.2rem); font-weight: bold; color: var(--navy); line-height: 1.35; }
+.f-sub   { font-size: clamp(.7rem, 1.2vw, .85rem); color: var(--sub); margin-top: 3px; }
+.arr { font-size: clamp(1.2rem, 2.5vw, 1.8rem); color: var(--navy); opacity: .4; flex-shrink: 0; }
+
+/* ── Info box ── */
+.info {
+  border-radius: 10px;
+  padding: clamp(12px, 2vh, 18px) clamp(14px, 2vw, 24px);
+  font-size: clamp(.9rem, 1.7vw, 1.1rem);
+  line-height: 1.6;
+  margin-top: 2vh;
+}
+.info.blue   { background: #e8f4fd; color: #1a3a5c; }
+.info.green  { background: #e8f7ed; color: #1a5a30; border: 2px solid #7dd3a8; }
+.info.amber  { background: #fff8e1; color: #7a5000; border: 2px solid var(--amber); }
+
+/* ── FAQ ── */
+.faq { background: #f4f8fc; border-radius: 10px; padding: clamp(12px, 2vh, 18px) clamp(14px, 2vw, 20px); margin-bottom: clamp(10px, 1.5vh, 16px); }
+.faq-q { font-weight: bold; color: var(--navy); font-size: clamp(.9rem, 1.7vw, 1.1rem); margin-bottom: 5px; }
+.faq-a { font-size: clamp(.85rem, 1.5vw, 1rem); color: var(--sub); line-height: 1.55; }
+
+/* ── Summary big text ── */
+.big { text-align: center; font-size: clamp(1.4rem, 3.5vw, 2.4rem); font-weight: bold; color: var(--navy); line-height: 1.45; }
+.flow-steps { font-size: clamp(.85rem, 1.6vw, 1.1rem); color: var(--sub); line-height: 2.2; margin-top: 1.5vh; text-align: center; }
+
+/* ── Progress ── */
+.prog {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 5px;
+  background: rgba(0,0,0,.08); z-index: 100;
+}
+.prog-bar { height: 100%; background: var(--navy); transition: width .3s ease; }
+
+/* ── Counter ── */
+.counter {
+  position: fixed; bottom: 12px; right: 20px;
+  font-size: .8rem; color: rgba(0,0,0,.3); z-index: 100; pointer-events: none;
+}
+.hint {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  font-size: .78rem; color: rgba(0,0,0,.25); z-index: 100; pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ─── 表紙 ─── -->
+  <div class="slide slide-cover active" id="s0">
+    <div class="cover-tag">千葉英和高校　生徒会　令和8年6月</div>
+    <div class="cover-title">実証実験のお願い</div>
+    <div class="cover-sub">入場管理システム　QRコードチェックイン</div>
+    <div class="cover-date">📅　実施日：6月19日（木）登校時</div>
+  </div>
+
+  <!-- ─── 1 実証実験って何？ ─── -->
+  <div class="slide" id="s1">
+    <div class="band">
+      <h2>実証実験って何？</h2>
+      <span class="band-num">1 / 8</span>
+    </div>
+    <div class="body">
+      <p class="lead">梨花祭の<strong>入場管理システム</strong>を、本番前に<strong>テスト運用</strong>します。</p>
+      <div class="g3">
+        <div class="card">
+          <span class="card-icon">📱</span>
+          <div class="card-title">やること</div>
+          <div class="card-text">登校時に<strong>スマホのQRコード</strong>を係の端末にかざす</div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🎯</span>
+          <div class="card-title">目的</div>
+          <div class="card-text">梨花祭本番を<br>スムーズに運営するための<strong>ドライラン</strong></div>
+        </div>
+        <div class="card">
+          <span class="card-icon">⏱️</span>
+          <div class="card-title">所要時間</div>
+          <div class="card-text">登校時に<br><strong>数秒</strong>かざすだけ（授業には影響なし）</div>
+        </div>
+      </div>
+      <div class="info blue" style="margin-top:2.5vh;">
+        💡 <strong>梨花祭本番と同じシステムをそのまま使います。</strong>この実験で慣れておけば、本番当日もスムーズ！
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 2 なぜやるの？ ─── -->
+  <div class="slide" id="s2">
+    <div class="band">
+      <h2>なぜやるの？</h2>
+      <span class="band-num">2 / 8</span>
+    </div>
+    <div class="body">
+      <p class="lead">3つの目的があります：</p>
+      <div class="g3">
+        <div class="card" style="border-color:#7dd3a8; background:#f0faf4;">
+          <span class="card-icon">🔧</span>
+          <div class="card-title" style="color:#1a6a40;">システムの確認</div>
+          <div class="card-text">大人数で使ったとき<br>に問題なく動くかを確認する</div>
+        </div>
+        <div class="card" style="border-color:#93c5fd; background:#eff6ff;">
+          <span class="card-icon">👨‍🏫</span>
+          <div class="card-title" style="color:#1d4ed8;">スタッフの練習</div>
+          <div class="card-text">係の先生・生徒が<br>QRスキャン操作に慣れる</div>
+        </div>
+        <div class="card" style="border-color:#fca5a5; background:#fff5f5;">
+          <span class="card-icon">📋</span>
+          <div class="card-title" style="color:#9b1c1c;">本番前の改善</div>
+          <div class="card-text">問題点を梨花祭前に<br>見つけて直しておく</div>
+        </div>
+      </div>
+      <div style="margin-top:2.5vh; text-align:center; font-size:clamp(1.1rem,2.2vw,1.5rem); color:var(--navy); font-weight:bold;">
+        みなさんの協力が梨花祭の成功につながります！
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 3 全体の流れ ─── -->
+  <div class="slide" id="s3">
+    <div class="band">
+      <h2>全体の流れ（タイムライン）</h2>
+      <span class="band-num">3 / 8</span>
+    </div>
+    <div class="body">
+      <div class="tl">
+        <div class="tl-row">
+          <div class="tl-date">6月12日（木）〜</div>
+          <div>この説明 + 手順書を配布　（今日！）</div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">6月18日（水）まで</div>
+          <div><strong>事前準備</strong>：システムにログインしてQRコードをスクリーンショット保存</div>
+        </div>
+        <div class="tl-row accent">
+          <div class="tl-date">⭐ 6月19日（木）</div>
+          <div style="font-weight:bold; color:#7a5000;">実証実験 本番：登校時にQRをかざす</div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-date">6月19日 HR〜</div>
+          <div>アンケートに回答（5分程度）</div>
+        </div>
+      </div>
+      <div class="info amber">
+        ⚠️ <strong>6月18日（水）までに準備を済ませてください！</strong><br>
+        前日の夜でも間に合いますが、早めがおすすめです。
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 4 事前準備 ①〜③ ─── -->
+  <div class="slide" id="s4">
+    <div class="band">
+      <h2>事前準備　①〜③</h2>
+      <span class="band-num">4 / 8</span>
+    </div>
+    <div class="body">
+      <div class="url-box">rikasai-reservation.vercel.app/student</div>
+      <ul class="steps">
+        <li class="step">
+          <div class="step-n">①</div>
+          <div>
+            <strong>ページを開く</strong>：スマホのブラウザ（Chrome / Safari）で上のURLにアクセス
+            <span class="step-hint">「新規登録」タブを選ぶ</span>
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-n">②</div>
+          <div>
+            <strong>学校メールを入力</strong>：<span class="hl">〇〇@biblos.ac.jp</span> を入力して「認証コードを送信」をタップ
+            <span class="step-hint">Gmailに6桁の数字が届きます（数分かかる場合あり）</span>
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-n">③</div>
+          <div>
+            <strong>ログイン</strong>：Gmailアプリでコードを確認 → 6桁を入力 → 「ログイン」をタップ
+            <span class="step-hint">2回目以降は「ログイン」タブからすぐに入れます</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─── 5 事前準備 ④〜⑤ ─── -->
+  <div class="slide" id="s5">
+    <div class="band">
+      <h2>事前準備　④〜⑤</h2>
+      <span class="band-num">5 / 8</span>
+    </div>
+    <div class="body">
+      <ul class="steps">
+        <li class="step">
+          <div class="step-n">④</div>
+          <div>
+            <strong>招待リンクを生成する</strong>：「ゲストの名称を入力」欄に<span class="hl">自分の名前</span>を入力 →「招待リンクを生成」をタップ
+          </div>
+        </li>
+        <li class="step">
+          <div class="step-n">⑤</div>
+          <div>
+            <strong>QRコードをスクリーンショット保存</strong>：生成されたリンクを開くとQRコードが表示される → <span class="hl">スクリーンショット</span>を撮って保存
+            <span class="step-hint">実験当日まで削除しないでください！</span>
+          </div>
+        </li>
+      </ul>
+      <div class="info green">
+        ✅ <strong>QRコードのスクリーンショットが保存できたら準備完了！</strong><br>
+        スクリーンショット保存しておけば、当日オフライン・電波なしでも使えます。
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 6 当日の流れ ─── -->
+  <div class="slide" id="s6">
+    <div class="band">
+      <h2>当日の流れ（6月19日 登校時）</h2>
+      <span class="band-num">6 / 8</span>
+    </div>
+    <div class="body">
+      <div class="flow">
+        <div class="fbox">
+          <div class="f-label">① 到着</div>
+          <div class="f-main">昇降口で<br>スマホ準備</div>
+          <div class="f-sub">事前にQRを<br>開いておく</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="fbox">
+          <div class="f-label">② かざす</div>
+          <div class="f-main">QRを係の<br>端末にかざす</div>
+          <div class="f-sub">スクリーンショット<br>でもOK</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="fbox ok">
+          <div class="f-label">③ 成功 ✓</div>
+          <div class="f-main">ピッ！と<br>音がしたらOK</div>
+          <div class="f-sub">そのまま登校</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="fbox ng">
+          <div class="f-label">✕ エラー</div>
+          <div class="f-main">もう一度<br>かざしてみる</div>
+          <div class="f-sub">2回失敗→係に声を</div>
+        </div>
+      </div>
+      <div class="info blue">
+        💡 <strong>事前にQRのスクリーンショットを撮っておけば</strong>、電波なし・通信障害でも使えます！<br>
+        当日は電波が混み合う可能性があるため、スクリーンショット保存を強くおすすめします。
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 7 困ったときは？ ─── -->
+  <div class="slide" id="s7">
+    <div class="band">
+      <h2>困ったときは？</h2>
+      <span class="band-num">7 / 8</span>
+    </div>
+    <div class="body">
+      <div class="faq">
+        <div class="faq-q">Q. QRコードを保存し忘れた！</div>
+        <div class="faq-a">→ 当日登校前に、もう一度 <strong>rikasai-reservation.vercel.app/student</strong> にログインして STEP ④〜⑤ をやり直せばOKです。</div>
+      </div>
+      <div class="faq">
+        <div class="faq-q">Q. スマホを家に忘れた・スマホを持っていない</div>
+        <div class="faq-a">→ 係に声をかけてください。名前で手動確認できます。</div>
+      </div>
+      <div class="faq">
+        <div class="faq-q">Q. 学校メールが受信できない</div>
+        <div class="faq-a">→ 迷惑メールフォルダを確認してください。それでも届かない場合は係（生徒会）に連絡を。</div>
+      </div>
+      <div class="faq">
+        <div class="faq-q">Q. これって本当に必要なの？</div>
+        <div class="faq-a">→ この実験のデータが梨花祭本番の改善に直結します。ぜひ協力してください！</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 8 まとめ ─── -->
+  <div class="slide" id="s8">
+    <div class="band">
+      <h2>まとめ</h2>
+      <span class="band-num">8 / 8</span>
+    </div>
+    <div class="body" style="justify-content:center; text-align:center;">
+      <div class="big">6月18日（水）までに<br>QRコードを保存しよう！</div>
+      <div class="url-box" style="max-width:720px; margin:2.5vh auto;">
+        rikasai-reservation.vercel.app/student
+      </div>
+      <div class="flow-steps">
+        ① URLにアクセス　→　② 学校メールで認証　→　③ 招待リンク生成　→　<strong>④ QRをスクリーンショット保存</strong>
+      </div>
+      <div style="margin-top:2vh; font-size:clamp(.85rem,1.5vw,1rem); color:#888;">
+        質問は生徒会まで　／　手順書は配布プリントを確認
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="prog"><div class="prog-bar" id="bar"></div></div>
+<div class="counter" id="cnt">1 / 9</div>
+<div class="hint">← → キー　または　クリックで進む　　F11 でフルスクリーン</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const N = slides.length;
+  let cur = 0;
+
+  function go(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, N - 1));
+    slides[cur].classList.add('active');
+    document.getElementById('bar').style.width = ((cur + 1) / N * 100) + '%';
+    document.getElementById('cnt').textContent = (cur + 1) + ' / ' + N;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    if (['ArrowLeft',  'ArrowUp',   'PageUp'         ].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  });
+
+  document.getElementById('deck').addEventListener('click', function (e) {
+    go(e.clientX > window.innerWidth / 2 ? cur + 1 : cur - 1);
+  });
+
+  go(0);
+}());
+</script>
+</body>
+</html>
