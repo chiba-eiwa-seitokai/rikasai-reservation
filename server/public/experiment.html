@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>実証実験 操作手順 — 梨花祭2026</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .exp-hero {
+      background: linear-gradient(150deg, #1a3a5c 0%, #2a5a8c 60%, #1a6a8c 100%);
+      color: #fff;
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      margin-bottom: 2rem;
+    }
+    .exp-hero h1 { font-size: 1.8rem; font-weight: bold; margin-bottom: .5rem; }
+    .exp-hero p  { font-size: 1rem; opacity: .85; margin-bottom: 1.2rem; line-height: 1.7; }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.45);
+      border-radius: 30px;
+      padding: 7px 22px;
+      font-size: .95rem;
+      font-weight: bold;
+      letter-spacing: .05em;
+    }
+
+    .section-label {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .6rem;
+    }
+
+    .step-card {
+      background: var(--color-card);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.2rem;
+      margin-bottom: .75rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .step-badge {
+      background: #1a3a5c;
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: .9rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-weight: 700; font-size: .95rem; color: var(--color-text); margin-bottom: .25rem; }
+    .step-desc  { font-size: .85rem; color: var(--color-text-sub); line-height: 1.6; }
+    .step-url   {
+      background: #eef3f9;
+      border: 1px solid #b0c4d8;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: .85rem;
+      font-weight: bold;
+      color: #1a3a5c;
+      display: inline-block;
+      margin: .3rem 0;
+      word-break: break-all;
+    }
+    .step-em {
+      background: #fff3cd;
+      color: #7a5000;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: .85rem;
+    }
+
+    .flow-row {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+    }
+    .flow-cell {
+      flex: 1;
+      background: var(--color-card);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: .7rem .5rem;
+      text-align: center;
+      font-size: .82rem;
+    }
+    .flow-cell.ok { background: #e8f7ed; border-color: #7dd3a8; }
+    .flow-cell.ng { background: #fef2f2; border-color: #fca5a5; }
+    .flow-cell .fc-n { font-size: .72rem; color: var(--color-text-sub); margin-bottom: 3px; }
+    .flow-cell .fc-t { font-weight: 700; color: #1a3a5c; line-height: 1.35; }
+    .flow-arr { display: flex; align-items: center; color: #999; font-size: 1rem; flex-shrink: 0; }
+
+    .faq-item {
+      background: var(--color-card);
+      border-radius: var(--radius-md);
+      padding: .9rem 1.1rem;
+      margin-bottom: .65rem;
+    }
+    .faq-q { font-weight: 700; font-size: .9rem; color: #1a3a5c; margin-bottom: .3rem; }
+    .faq-a { font-size: .85rem; color: var(--color-text-sub); line-height: 1.6; }
+
+    .cta-btn {
+      display: block;
+      width: 100%;
+      background: #1a3a5c;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      margin-top: 1.5rem;
+      letter-spacing: .02em;
+    }
+    .cta-btn:active { opacity: .85; }
+
+    .notice {
+      background: #fff8e1;
+      border: 1.5px solid #f0b800;
+      border-radius: var(--radius-md);
+      padding: .75rem 1rem;
+      font-size: .85rem;
+      color: #7a5000;
+      margin-bottom: 1.5rem;
+    }
+
+    .page-wrap { max-width: 540px; margin: 0 auto; padding: 0 1rem 3rem; }
+  </style>
+</head>
+<body class="landing-page" style="background: var(--color-bg-page, #f5f7fa);">
+
+<div class="exp-hero">
+  <div class="hero-badge">📅 6月19日（木）登校時</div>
+  <h1 style="margin-top:1rem;">実証実験 操作手順</h1>
+  <p>梨花祭本番のリハーサルとして<br>登校時にQRコードをかざすテストを行います。</p>
+</div>
+
+<div class="page-wrap">
+
+  <div class="notice">
+    ⚠️ <strong>6月18日（水）までに</strong>、QRコードをスクリーンショット保存してください。
+  </div>
+
+  <!-- 事前準備 -->
+  <div class="section-label">事前準備（6月18日・水曜日まで）</div>
+
+  <div class="step-card">
+    <div class="step-badge">①</div>
+    <div class="step-content">
+      <div class="step-title">システムページを開く</div>
+      <div class="step-desc">
+        スマホのブラウザ（Safari・Chrome）で下のURLにアクセス：<br>
+        <span class="step-url">rikasai-reservation.vercel.app/student</span><br>
+        「新規登録」タブを選んでください。
+      </div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">②</div>
+    <div class="step-content">
+      <div class="step-title">認証コードを受け取る</div>
+      <div class="step-desc">
+        学校メールアドレス（@biblos.ac.jp）・氏名・クラスを入力して
+        <span class="step-em">「認証コードを送信」</span>をタップ。<br>
+        Gmailに6桁の数字が届きます（数分かかる場合あり）。
+      </div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">③</div>
+    <div class="step-content">
+      <div class="step-title">ログインする</div>
+      <div class="step-desc">
+        Gmailアプリでコードを確認し、6桁を入力して
+        <span class="step-em">「ログイン」</span>をタップ。<br>
+        2回目以降は「ログイン」タブからできます。
+      </div>
+    </div>
+  </div>
+
+  <div class="step-card">
+    <div class="step-badge">④</div>
+    <div class="step-content">
+      <div class="step-title">招待リンクを生成する</div>
+      <div class="step-desc">
+        ダッシュボードの「ゲストの名称を入力」欄に
+        <span class="step-em">自分の名前</span>を入力して
+        <span class="step-em">「招待リンクを生成」</span>をタップ。
+      </div>
+    </div>
+  </div>
+
+  <div class="step-card" style="border-color: #7dd3a8; background: #f0faf4;">
+    <div class="step-badge" style="background:#1a6a40;">⑤</div>
+    <div class="step-content">
+      <div class="step-title" style="color:#1a6a40;">QRコードをスクリーンショット保存 ★重要★</div>
+      <div class="step-desc">
+        生成されたリンクを開くとQRコードが表示されます。<br>
+        そのまま<strong>スクリーンショット</strong>を撮って保存してください。<br>
+        <span style="font-size:.8rem; color:#555;">実験当日まで削除しないでください。保存し忘れた場合は当日もう一度ログインして④〜⑤をやり直せばOKです。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 当日の流れ -->
+  <div class="section-label" style="margin-top:1.75rem;">当日の流れ（6月19日 登校時）</div>
+
+  <div class="flow-row">
+    <div class="flow-cell">
+      <div class="fc-n">① 到着</div>
+      <div class="fc-t">昇降口で<br>スマホ準備</div>
+    </div>
+    <div class="flow-arr">›</div>
+    <div class="flow-cell">
+      <div class="fc-n">② かざす</div>
+      <div class="fc-t">QRを係の<br>端末にかざす</div>
+    </div>
+    <div class="flow-arr">›</div>
+    <div class="flow-cell ok">
+      <div class="fc-n">③ 成功</div>
+      <div class="fc-t">ピッ！<br>そのまま登校</div>
+    </div>
+    <div class="flow-arr">›</div>
+    <div class="flow-cell ng">
+      <div class="fc-n">✕ エラー</div>
+      <div class="fc-t">もう一度<br>係に声を</div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section-label" style="margin-top:.25rem;">困ったときは？</div>
+
+  <div class="faq-item">
+    <div class="faq-q">Q. QRコードを保存し忘れた！</div>
+    <div class="faq-a">→ 当日登校前にもう一度 rikasai-reservation.vercel.app/student にログインして STEP ④〜⑤ をやり直せばOK。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Q. スマホを忘れた・持っていない</div>
+    <div class="faq-a">→ 係に声をかけてください。名前で手動確認できます。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Q. 学校メールが届かない</div>
+    <div class="faq-a">→ 迷惑メールフォルダを確認してください。それでも届かない場合は係（生徒会）に連絡を。</div>
+  </div>
+
+  <a href="/student" class="cta-btn">今すぐログインしてQRを取得する →</a>
+
+  <p style="text-align:center; font-size:.78rem; color:#aaa; margin-top:1.25rem;">
+    千葉英和高校 生徒会　令和8年6月
+  </p>
+</div>
+
+</body>
+</html>
