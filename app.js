@@ -15,7 +15,6 @@ require('dotenv').config();
 const multer = require('multer');
 const fs = require('fs');
 const csvParser = require('csv-parser');
-const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
 
 const app = express();
@@ -107,8 +106,12 @@ let isFixedOtpMode = false;
 const TEST_FIXED_OTP = '123456';
 
 // データベース同期 (自動でテーブルを作成/変更)
-sequelize.sync({ alter: true })
-    .then(async () => {
+// 本番(サーバーレス)ではコールドスタートのたびに実行されDDLのロック競合や遅延を招くため、
+// RUN_DB_SYNC=true を指定したときだけ実行する。スキーマ変更時は一時的に有効化すること。
+const shouldRunDbSync = !IS_PRODUCTION || process.env.RUN_DB_SYNC === 'true';
+(async () => {
+    if (shouldRunDbSync) {
+        await sequelize.sync({ alter: true });
         console.log('Database synced (PostgreSQL)');
         // 譲渡カラムのマイグレーション（syncが追加しない場合の保険）
         try {
@@ -122,8 +125,8 @@ sequelize.sync({ alter: true })
             await User.create({ username: 'admin', password: hashedPassword, role: 'admin' });
             console.log('Admin user created');
         }
-    })
-    .catch(err => console.error('Database sync error:', err));
+    }
+})().catch(err => console.error('Database sync error:', err));
 
 // 注意: エラーハンドリングミドルウェアはファイル末尾に配置
 
@@ -261,7 +264,7 @@ app.post('/api/login', loginLimiter, async (req, res, next) => {
             const token = jwt.sign(
                 { id: user.id, username: user.username, role: user.role },
                 process.env.JWT_SECRET,
-                { expiresIn: '4h' }
+                { expiresIn: '12h' } // 受付端末が開催時間中（朝〜夕方）に失効しないよう12時間
             );
             res.json({ success: true, token });
         } else {
@@ -300,9 +303,10 @@ app.get('/api/report', authenticateToken, authorizeRole(['admin']), async (req, 
 
         slots.forEach(s => {
             if (s.used && s.checked_in_at) {
-                const date = new Date(s.checked_in_at);
-                const hour = date.getHours();
-                const day = date.toISOString().split('T')[0];
+                // サーバーはUTCで動くため、日本時間(UTC+9)に変換してから時刻・日付を取り出す
+                const jst = new Date(new Date(s.checked_in_at).getTime() + 9 * 60 * 60 * 1000);
+                const hour = jst.getUTCHours();
+                const day = jst.toISOString().split('T')[0];
 
                 hourlyDataMap[hour] = (hourlyDataMap[hour] || 0) + 1;
                 dailyDataMap[day] = (dailyDataMap[day] || 0) + 1;
@@ -393,7 +397,14 @@ app.post('/api/verify', authenticateToken, async (req, res, next) => {
             return res.status(404).json({ message: '招待リンクが見つかりません。' });
         }
 
-        if (slot.used) {
+        // used=false の行だけを更新する条件付きUPDATEで、同一QRの同時読み取りでも
+        // 入場承認が1回しか成立しないことを保証する
+        const [affectedCount] = await GuestSlot.update(
+            { used: true, checked_in_at: new Date().toISOString() },
+            { where: { token, used: false } }
+        );
+
+        if (affectedCount === 0) {
             return res.json({
                 message: '既に入場済みです。',
                 slot: {
@@ -403,8 +414,6 @@ app.post('/api/verify', authenticateToken, async (req, res, next) => {
                 }
             });
         }
-
-        await GuestSlot.update({ used: true, checked_in_at: new Date().toISOString() }, { where: { token } });
 
         return res.json({
             message: '入場が承認されました。',
@@ -458,7 +467,11 @@ app.post('/api/admin/guest-slots/:id/check-in', authenticateToken, authorizeRole
         const { id } = req.params;
         const slot = await GuestSlot.findOne({ where: { id } });
         if (!slot) return res.status(404).json({ message: 'スロットが見つかりません。' });
-        await GuestSlot.update({ used: true, checked_in_at: new Date().toISOString() }, { where: { id } });
+        const [affectedCount] = await GuestSlot.update(
+            { used: true, checked_in_at: new Date().toISOString() },
+            { where: { id, used: false } }
+        );
+        if (affectedCount === 0) return res.json({ message: '既に入場済みです。' });
         res.json({ message: 'チェックイン完了' });
     } catch (error) {
         next(error);
@@ -748,34 +761,7 @@ app.get('/api/admin/test/status', authenticateToken, authorizeRole(['admin']), a
     res.json({ isFixedOtpMode });
 });
 
-// ゲスト用 予約ステータス確認エンドポイント (認証不要・読み取り専用)
-app.get('/api/reservation-status/:id', async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const reservation = await Reservation.findByPk(id);
-
-        if (!reservation) {
-            return res.status(404).json({ found: false, message: '予約が見つかりません。' });
-        }
-
-        // プライバシー保護: 名前を部分マスキング
-        const fullName = reservation.name || '';
-        let maskedName = fullName;
-        if (fullName.length > 1) {
-            maskedName = fullName[0] + '＊'.repeat(fullName.length - 1);
-        }
-
-        res.json({
-            found: true,
-            id: reservation.id,
-            name: maskedName,
-            status: reservation.status,
-            createdAt: reservation.createdAt
-        });
-    } catch (error) {
-        next(error);
-    }
-});
+// (旧システムの /api/reservation-status は廃止: Reservationモデルが存在せず常に500を返していた)
 
 // ルート定義 (重複を解消)
 app.get('/', (req, res) => {
@@ -800,6 +786,10 @@ const ALLOWED_DOMAIN = '@biblos.ac.jp';
 const GUEST_SLOTS_PER_STUDENT = parseInt(process.env.GUEST_SLOTS_PER_STUDENT || '3', 10);
 const STUDENT_JWT_SECRET = process.env.JWT_SECRET + '_student';
 
+// テスト用アカウント(test_student_*)は本番では一切認証させない
+// （固定OTPのテストデータがDBに残っていた場合にバックドア化するのを防ぐ）
+const isBlockedTestEmail = (email) => IS_PRODUCTION && email.startsWith('test_student_');
+
 // ログイン用OTP送信（既存アカウント、メールのみ）
 app.post('/api/student/login-otp', otpLimiter, [
     body('email').isEmail().withMessage('有効なメールアドレスを入力してください')
@@ -812,7 +802,7 @@ app.post('/api/student/login-otp', otpLimiter, [
 
         const normalizedEmail = req.body.email.trim().toLowerCase();
 
-        if (!normalizedEmail.endsWith(ALLOWED_DOMAIN)) {
+        if (!normalizedEmail.endsWith(ALLOWED_DOMAIN) || isBlockedTestEmail(normalizedEmail)) {
             return res.status(403).json({ message: `学校配布のメールアドレス（${ALLOWED_DOMAIN}）のみ使用できます。` });
         }
 
@@ -826,8 +816,8 @@ app.post('/api/student/login-otp', otpLimiter, [
 
         await Student.upsertOtp(normalizedEmail, student.name, otp, otpExpiresAt);
 
-        const isTestAccount = normalizedEmail.startsWith('test_student_');
-        const skipEmail = isFixedOtpMode || isTestAccount;
+        const isTestAccount = !IS_PRODUCTION && normalizedEmail.startsWith('test_student_');
+        const skipEmail = !IS_PRODUCTION && (isFixedOtpMode || isTestAccount);
 
         if (skipEmail) {
             console.log(`[TEST MODE] Skip sending login OTP email to: ${normalizedEmail}. Use code: ${otp}`);
@@ -876,7 +866,7 @@ app.post('/api/student/request-otp', otpLimiter, [
         const normalizedEmail = email.trim().toLowerCase();
 
         // ドメイン制限
-        if (!normalizedEmail.endsWith(ALLOWED_DOMAIN)) {
+        if (!normalizedEmail.endsWith(ALLOWED_DOMAIN) || isBlockedTestEmail(normalizedEmail)) {
             return res.status(403).json({ message: `学校配布のメールアドレス（${ALLOWED_DOMAIN}）のみ使用できます。` });
         }
 
@@ -886,8 +876,8 @@ app.post('/api/student/request-otp', otpLimiter, [
 
         await Student.upsertOtp(normalizedEmail, escapeHtml(name.trim()), otp, otpExpiresAt, escapeHtml(grade_class.trim()));
 
-        const isTestAccount = normalizedEmail.startsWith('test_student_');
-        const skipEmail = isFixedOtpMode || isTestAccount;
+        const isTestAccount = !IS_PRODUCTION && normalizedEmail.startsWith('test_student_');
+        const skipEmail = !IS_PRODUCTION && (isFixedOtpMode || isTestAccount);
 
         if (skipEmail) {
             console.log(`[TEST MODE] Skip sending Student Registration OTP email to: ${normalizedEmail}. Use code: ${otp}`);
@@ -935,6 +925,10 @@ app.post('/api/student/verify-otp', loginLimiter, [
 
         const { email, otp } = req.body;
         const normalizedEmail = email.trim().toLowerCase();
+
+        if (isBlockedTestEmail(normalizedEmail)) {
+            return res.status(401).json({ message: '認証コードが正しくありません。' });
+        }
 
         // テストモード（全体）またはテスト用アカウントの判定（本番では無効）
         const isTestAccount = !IS_PRODUCTION && normalizedEmail.startsWith('test_student_');
@@ -1048,25 +1042,43 @@ app.post('/api/student/generate-links', authenticateStudent, [
         }
 
         // 既存スロット数と上限チェック
-        const student = await Student.findOne({ where: { email: encryptDeterministic(req.student.email) } });
-        const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : GUEST_SLOTS_PER_STUDENT;
-        
-        const existingCount = await GuestSlot.count({ where: { student_email: encryptDeterministic(req.student.email) } });
-        if (existingCount >= maxSlots) {
-            return res.status(400).json({
-                message: `招待枠の上限（${maxSlots}枠）に達しています。`
-            });
-        }
-
+        // 同時リクエストで上限を超えないよう、生徒行をロックした上でcount→createを行う
         const token = crypto.randomBytes(24).toString('hex');
-        const slot = await GuestSlot.create({
-            id: crypto.randomBytes(8).toString('hex'),
-            token,
-            student_email: req.student.email,
-            student_name: req.student.name,
-            guest_name: escapeHtml(req.body.guest_name.trim()),
-            used: false
-        });
+        let slot;
+        try {
+            slot = await sequelize.transaction(async (t) => {
+                const student = await Student.findOne({
+                    where: { email: encryptDeterministic(req.student.email) },
+                    transaction: t,
+                    lock: t.LOCK.UPDATE
+                });
+                const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : GUEST_SLOTS_PER_STUDENT;
+
+                const existingCount = await GuestSlot.count({
+                    where: { student_email: encryptDeterministic(req.student.email) },
+                    transaction: t
+                });
+                if (existingCount >= maxSlots) {
+                    const limitError = new Error(`招待枠の上限（${maxSlots}枠）に達しています。`);
+                    limitError.isSlotLimit = true;
+                    throw limitError;
+                }
+
+                return GuestSlot.create({
+                    id: crypto.randomBytes(8).toString('hex'),
+                    token,
+                    student_email: req.student.email,
+                    student_name: req.student.name,
+                    guest_name: escapeHtml(req.body.guest_name.trim()),
+                    used: false
+                }, { transaction: t });
+            });
+        } catch (txError) {
+            if (txError.isSlotLimit) {
+                return res.status(400).json({ message: txError.message });
+            }
+            throw txError;
+        }
 
         const baseUrl = process.env.FRONTEND_URL || `http://localhost:${port}`;
         const inviteUrl = `${baseUrl}/?token=${token}`;
@@ -1182,16 +1194,21 @@ app.post('/api/student/claim-slot', authenticateStudent, [
         }
 
         const newToken = crypto.randomBytes(24).toString('hex');
-        await sequelize.query(
-            `UPDATE "GuestSlots" SET "student_email" = :email, "student_name" = :name, "guest_name" = :gname, "token" = :token, "transfer_code" = NULL, "transfer_expires_at" = NULL WHERE "id" = :id`,
+        // transfer_code がまだ有効な行だけを更新し、同じコードの同時受け取りを防ぐ
+        const [claimedRows] = await sequelize.query(
+            `UPDATE "GuestSlots" SET "student_email" = :email, "student_name" = :name, "guest_name" = :gname, "token" = :token, "transfer_code" = NULL, "transfer_expires_at" = NULL WHERE "id" = :id AND "transfer_code" = :code AND "used" = false RETURNING "id"`,
             { replacements: {
                 email: encryptDeterministic(req.student.email),
                 name: encrypt(req.student.name),
                 gname: encrypt('（名前未設定）'),
                 token: newToken,
-                id: row.id
+                id: row.id,
+                code
             }}
         );
+        if (!claimedRows || claimedRows.length === 0) {
+            return res.status(409).json({ message: 'この譲渡コードは既に使用されました。' });
+        }
 
         const baseUrl = process.env.FRONTEND_URL || `http://localhost:${port}`;
         res.json({
@@ -1244,22 +1261,7 @@ app.get('/api/guest-entry/:token', async (req, res, next) => {
 });
 
 // ===== 実験・テスト支援機能 (管理者) =====
-
-// テストステータス取得
-app.get('/api/admin/test/status', authenticateToken, authorizeRole(['admin']), async (req, res) => {
-    res.json({ isFixedOtpMode });
-});
-
-// 全体テストモード（固定OTP）の切り替え
-app.post('/api/admin/test/toggle-otp', authenticateToken, authorizeRole(['admin']), async (req, res) => {
-    const { enabled } = req.body;
-    isFixedOtpMode = !!enabled;
-    res.json({ 
-        success: true, 
-        enabled: isFixedOtpMode, 
-        message: isFixedOtpMode ? 'テストモード（固定OTP: 123456）を有効にしました。' : 'テストモードを無効にしました。' 
-    });
-});
+// (status / toggle-otp / clear はファイル前半の定義を使用。重複定義は削除済み)
 
 // テストデータ生成 (クラス指定対応)
 app.post('/api/admin/test/generate', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
@@ -1353,31 +1355,6 @@ app.post('/api/admin/test/generate', authenticateToken, authorizeRole(['admin'])
 
         res.json({ success: true, message: `${generatedTotal}名のテストデータを生成しました。認証コードは「${fixedOtp}」で固定されています。` });
     } catch (error) { next(error); }
-});
-
-// テストデータ削除
-app.post('/api/admin/test/clear', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
-    try {
-        const { mode } = req.body;
-        if (mode === 'all') {
-            // 全削除 (管理者以外)
-            await GuestSlot.destroy({ where: {} });
-            await Student.destroy({ where: {} });
-            return res.json({ message: '管理アカウント以外の全データを削除しました。' });
-        } else {
-            // テスト生徒のみ削除
-            const allStudents = await Student.findAll();
-            const testStudents = allStudents.filter(s => s.email && s.email.startsWith('test_student_'));
-            const emails = testStudents.map(s => s.email);
-            if (emails.length > 0) {
-                await GuestSlot.destroy({ where: { student_email: { [Op.in]: emails.map(e => encryptDeterministic(e)) } } });
-                await Student.destroy({ where: { email: { [Op.in]: emails.map(e => encryptDeterministic(e)) } } });
-            }
-            return res.json({ message: 'テストデータに関連する生徒とスロットを削除しました。' });
-        }
-    } catch (error) {
-        next(error);
-    }
 });
 
 // 配布用名簿データ取得
