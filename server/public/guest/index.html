@@ -51,7 +51,8 @@
                 </svg>
             </div>
             <p class="subtitle" style="color: var(--color-error);">このリンクは使用済みです</p>
-            <p style="color: var(--color-text-sub);">当日受付でお知らせください。</p>
+            <p style="color: var(--color-text-sub);">このQRコードでの入場手続きは完了しています。</p>
+            <p style="color: var(--color-text-sub); margin-top: 0.75rem; background: var(--color-bg); border-radius: var(--radius-md); padding: 0.75rem; font-size: 0.9rem;">まだ入場されていないのにこの画面が出る場合は、<strong>受付スタッフにお名前をお伝えください</strong>。名簿で確認のうえご案内します。</p>
         </div>
 
         <!-- エラー -->
@@ -64,7 +65,8 @@
         <div id="state-qr" style="display: none;">
             <p class="subtitle">入場用QRコード</p>
             <p id="guest-greeting" style="font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;"></p>
-            <img id="qr-image" src="" alt="入場用QRコード" style="width: 220px; height: 220px; border-radius: var(--radius-md); border: 3px solid var(--color-success);"/>
+            <img id="qr-image" src="" alt="入場用QRコード" style="width: 280px; height: 280px; max-width: 90%; border-radius: var(--radius-md); border: 3px solid var(--color-success);"/>
+            <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-top: 0.5rem;">💡 受付では<strong>画面を明るく</strong>してかざしてください</p>
             <div style="margin-top: 1.5rem; background: var(--color-bg); border-radius: var(--radius-md); padding: 1rem;">
                 <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 10px;">当日は回線が混雑し、このページが開けなくなる可能性があります。<br><strong style="color: var(--color-error);">必ず事前にチケット画像を保存（またはスクリーンショット）</strong>して、当日は画像をご提示ください。</p>
                 <button class="btn btn-primary" onclick="downloadTicketImage()" style="width: 100%; padding: 12px; font-weight: bold;">📥 チケット画像を端末に保存</button>
