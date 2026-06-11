@@ -10,6 +10,8 @@ if (!process.env.DATABASE_URL) {
 // 暗号化設定
 const secret = process.env.JWT_SECRET || 'fallback_secret_key_for_development_encryption';
 const key = crypto.scryptSync(secret, 'salt', 32);
+// scryptSyncは1回約45msと重いため、決定的暗号化用IVも起動時に1回だけ導出する
+const deterministicIv = crypto.scryptSync(secret, 'deterministic_iv', 16);
 
 function encrypt(text) {
     if (!text || typeof text !== 'string') return text;
@@ -44,8 +46,7 @@ function encryptDeterministic(text) {
     if (!text || typeof text !== 'string') return text;
     if (text.startsWith('det:')) return text; // Already encrypted
     try {
-        const iv = crypto.scryptSync(secret, 'deterministic_iv', 16);
-        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, deterministicIv);
         let encrypted = cipher.update(text, 'utf8', 'hex');
         encrypted += cipher.final('hex');
         return 'det:' + encrypted;
@@ -58,8 +59,7 @@ function decryptDeterministic(text) {
     if (!text || typeof text !== 'string' || !text.startsWith('det:')) return text;
     try {
         const encryptedText = Buffer.from(text.substring(4), 'hex');
-        const iv = crypto.scryptSync(secret, 'deterministic_iv', 16);
-        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, deterministicIv);
         let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
         return decrypted;
@@ -78,6 +78,14 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
             require: true,
             rejectUnauthorized: false // 自己署名証明書などを許可するため（Render等でも必要になることが多い）
         }
+    },
+    // サーバーレス環境ではインスタンスごとに接続を保持するため、
+    // 1インスタンスあたりの接続数を絞ってSupabaseの接続上限枯渇を防ぐ
+    pool: {
+        max: 2,
+        min: 0,
+        acquire: 10000,
+        idle: 10000
     },
     logging: false // SQLログを無効化（開発時は console.log に変更してもOK）
 });
@@ -208,7 +216,20 @@ const GuestSlot = sequelize.define('GuestSlot', {
     checked_in_at: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    transfer_code: {
+        type: DataTypes.STRING(8),
+        allowNull: true
+    },
+    transfer_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
+}, {
+    indexes: [
+        { fields: ['student_email'] },
+        { fields: ['transfer_code'] }
+    ]
 });
 
 // 検索時の where 句インターセプト用フック

@@ -70,7 +70,6 @@
         (async function () {
             const params = new URLSearchParams(window.location.search);
             const token = params.get('token');
-            const legacyId = params.get('id');
 
             const loadingState = document.getElementById('loading-state');
             const successState = document.getElementById('verify-success');
@@ -99,34 +98,6 @@
                         showError('この招待リンクは既に使用済みです。');
                     } else {
                         showError(data.message || '招待リンクが無効です。');
-                    }
-                } catch (e) {
-                    showError('サーバーとの通信に失敗しました。');
-                }
-                return;
-            }
-
-            // 旧方式: id（後方互換）
-            if (legacyId) {
-                try {
-                    const response = await fetch(`/api/reservation-status/${encodeURIComponent(legacyId)}`);
-                    const data = await response.json();
-                    loadingState.style.display = 'none';
-
-                    if (response.ok && data.found) {
-                        successState.style.display = 'block';
-                        document.getElementById('res-name').textContent = data.name || '—';
-                        document.getElementById('res-student').textContent = '—';
-                        const statusMap = {
-                            'pending': { text: '予約済み', bg: 'var(--color-success-bg)', color: 'var(--color-success)' },
-                            'checked-in': { text: '入場済み', bg: 'var(--color-warning-bg)', color: '#D65A00' },
-                            'cancelled': { text: 'キャンセル済み', bg: 'var(--color-error-bg)', color: 'var(--color-error)' }
-                        };
-                        const st = statusMap[data.status] || statusMap['pending'];
-                        document.getElementById('res-status').innerHTML =
-                            `<span style="background: ${st.bg}; color: ${st.color}; padding: 4px 12px; border-radius: 50px; font-weight: 700; font-size: 14px;">${st.text}</span>`;
-                    } else {
-                        showError(data.message || '予約が見つかりません。');
                     }
                 } catch (e) {
                     showError('サーバーとの通信に失敗しました。');
