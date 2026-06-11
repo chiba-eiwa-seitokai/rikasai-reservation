@@ -291,7 +291,7 @@
                 <div class="form-group">
                     <label class="form-label" for="input-otp">認証コード（6桁）</label>
                     <input class="form-input" type="text" id="input-otp" placeholder="123456" maxlength="6"
-                        inputmode="numeric">
+                        inputmode="numeric" autocomplete="one-time-code">
                 </div>
                 <p id="otp-error" class="help is-danger" style="display:none;"></p>
                 <div style="display:flex; gap:0.75rem;">
@@ -299,6 +299,10 @@
                         onclick="backToForm()">戻る</button>
                     <button class="btn btn-primary" style="flex:2;" onclick="verifyOtp()">ログイン</button>
                 </div>
+                <p style="text-align:center; margin-top:1rem;">
+                    <button id="btn-resend-otp" onclick="resendOtp()" disabled
+                        style="background:none; border:none; font-size:0.85rem; padding:8px; cursor:pointer;">メールが届かない場合は再送できます（60秒後）</button>
+                </p>
             </div>
 
             <!-- 処理中インジケーター -->
@@ -529,6 +533,62 @@
             document.getElementById('form-register').style.display = 'none';
             document.getElementById('tab-bar') && (document.querySelector('.tab-bar').style.display = 'none');
             document.getElementById('step-otp').style.display = 'block';
+            startResendCountdown();
+        }
+
+        // ===== OTP再送（60秒のクールダウン付き） =====
+        let resendTimerId = null;
+        function startResendCountdown() {
+            const btn = document.getElementById('btn-resend-otp');
+            let remain = 60;
+            btn.disabled = true;
+            btn.style.color = 'var(--color-text-sub)';
+            btn.style.textDecoration = 'none';
+            btn.textContent = `メールが届かない場合は再送できます（${remain}秒後）`;
+            clearInterval(resendTimerId);
+            resendTimerId = setInterval(() => {
+                remain--;
+                if (remain <= 0) {
+                    clearInterval(resendTimerId);
+                    btn.disabled = false;
+                    btn.style.color = 'var(--color-primary)';
+                    btn.style.textDecoration = 'underline';
+                    btn.textContent = '認証コードを再送する';
+                } else {
+                    btn.textContent = `メールが届かない場合は再送できます（${remain}秒後）`;
+                }
+            }, 1000);
+        }
+
+        async function resendOtp() {
+            const errEl = document.getElementById('otp-error');
+            errEl.style.display = 'none';
+            const btn = document.getElementById('btn-resend-otp');
+            btn.disabled = true;
+            try {
+                const isRegister = currentTab === 'register';
+                const body = isRegister
+                    ? { email: studentEmail, name: document.getElementById('reg-name').value.trim(), grade_class: document.getElementById('reg-grade-class').value }
+                    : { email: studentEmail };
+                const res = await fetch(isRegister ? '/api/student/request-otp' : '/api/student/login-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showNotification('認証コードを再送しました。メールをご確認ください', 'success');
+                    startResendCountdown();
+                } else {
+                    errEl.textContent = data.message || '再送に失敗しました。';
+                    errEl.style.display = 'block';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                errEl.textContent = 'サーバーとの通信に失敗しました。';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+            }
         }
 
         // ===== OTP検証 =====
@@ -630,6 +690,7 @@
                                ? `<div style="margin-top:0.5rem; background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                                       <span style="font-size:0.78rem; color:#92400e;">譲渡コード：</span>
                                       <strong style="font-size:1rem; letter-spacing:0.1em; color:#78350f;">${slot.transfer_code}</strong>
+                                      <button class="btn-copy" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="copyTransferCode('${slot.transfer_code}')">📋 コピー</button>
                                       <button class="btn-copy" style="margin-left:auto; padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="cancelTransfer('${slot.id}')">キャンセル</button>
                                   </div>`
                                : `<button class="btn-copy" style="width:100%; margin-top:0.5rem; background:var(--color-bg); color:#6b7280; border:1px dashed #d1d5db; font-size:0.8rem;" onclick="issueTransfer('${slot.id}')">🔁 譲渡コードを発行</button>`
@@ -824,6 +885,15 @@
         }
 
         // ===== コピー =====
+        async function copyTransferCode(code) {
+            try {
+                await navigator.clipboard.writeText(code);
+                showNotification(`譲渡コード「${code}」をコピーしました`, 'success');
+            } catch (e) {
+                prompt('以下のコードをコピーしてください:', code);
+            }
+        }
+
         async function copyLink(url, idx, guestName) {
             try {
                 await navigator.clipboard.writeText(url);

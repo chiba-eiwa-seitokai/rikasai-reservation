@@ -24,45 +24,6 @@
 
 <body>
 
-    <!-- スキャン専用モード: フローティング脱出ボタン -->
-    <div id="scan-mode-exit-btn" style="
-        display: none;
-        position: fixed; top: 1rem; right: 1rem; z-index: 9999;
-        background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
-        color: #fff; border: none; border-radius: 8px;
-        padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600;
-        cursor: pointer; gap: 0.4rem; align-items: center;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-        transition: background 0.2s;
-    " onclick="exitScanMode()">
-        ← 通常モードに戻る
-    </div>
-
-    <style>
-        /* スキャン専用モード */
-        body.scan-mode #navbar,
-        body.scan-mode .tabs,
-        body.scan-mode .page-header {
-            display: none !important;
-        }
-        body.scan-mode .content-wrapper {
-            padding-top: 0 !important;
-        }
-        body.scan-mode .admin-container {
-            max-width: 100% !important;
-            padding: 1rem !important;
-        }
-        body.scan-mode #tab-qr {
-            display: block !important;
-        }
-        body.scan-mode #tab-qr > div[style*="grid-template-columns"] {
-            grid-template-columns: 3fr 2fr !important;
-        }
-        body.scan-mode .tab-content:not(#tab-qr) {
-            display: none !important;
-        }
-        #scan-mode-exit-btn:hover { background: rgba(0,0,0,0.75); }
-    </style>
     <div class="main-container">
         <!-- ログインモーダル -->
         <div id="login-modal" class="modal">
@@ -153,7 +114,6 @@
                 </div>
                 <div class="navbar-end">
                     <button class="btn btn-danger" onclick="logout()">ログアウト</button>
-                    <button id="btn-enter-scan-mode" class="btn" style="background:#6366f1; color:#fff; margin-left:0.5rem; display:none;" onclick="enterScanMode()">📷 スキャン専用モード</button>
                 </div>
             </div>
         </nav>
@@ -955,7 +915,7 @@
                         });
                     } else if (userRole === "reception") {
                         dom.tabList.innerHTML = `
-                            <li class="tab-item" data-target="tab-overview">
+                            <li class="tab-item" data-target="tab-reservations">
                                 <a class="tab-link">🎫 ゲスト一覧</a>
                             </li>
                             <li class="tab-item is-active" data-target="tab-qr">
@@ -963,7 +923,7 @@
                             </li>
                         `;
                         document.querySelectorAll(".tab-content").forEach((item) => {
-                            if (item.id !== "tab-qr" && item.id !== "tab-overview") {
+                            if (item.id !== "tab-qr" && item.id !== "tab-reservations") {
                                 item.classList.add("is-hidden");
                             } else if (item.id === "tab-qr") {
                                 item.classList.remove("is-hidden");
@@ -1055,24 +1015,6 @@
                 console.error("ログインエラー:", error);
                 showNotification("ログイン中にエラーが発生しました。", "error");
             }
-        }
-
-        // ===== スキャン専用モード =====
-        function enterScanMode() {
-            document.body.classList.add("scan-mode");
-            showTab("tab-qr");
-            const exitBtn = document.getElementById("scan-mode-exit-btn");
-            if (exitBtn) exitBtn.style.display = "flex";
-            // スキャン開始を自動実行
-            if (typeof startQrScanner === "function") {
-                try { startQrScanner(); } catch(e) {}
-            }
-        }
-
-        function exitScanMode() {
-            document.body.classList.remove("scan-mode");
-            const exitBtn = document.getElementById("scan-mode-exit-btn");
-            if (exitBtn) exitBtn.style.display = "none";
         }
 
         function logout() {
@@ -1208,7 +1150,7 @@
         let _lastScannedAt = 0;
         const QR_COOLDOWN_SAME_MS = 3000;   // 同じQRコード: 3秒間は無視
         const QR_COOLDOWN_ANY_MS = 1500;    // 別のQRコードでも: 1.5秒間は無視
-        const SUCCESS_PAUSE_MS = 4000;      // 入場OK後のカメラ一時停止時間（ms）
+        const SUCCESS_PAUSE_MS = 2000;      // 入場OK後のカメラ一時停止時間（ms）※同一QRは別途3秒クールダウンあり
         let isProcessing = false;           // API処理中フラグ（二重スキャン防止）
 
         function startQrScanner() {
@@ -1334,7 +1276,8 @@
 
                 if (data.message === '入場が承認されました。') {
                     displayReservationDetails(data);
-                    showCheckinNotification('入場完了しました');
+                    const guestName = data.slot && data.slot.guest_name ? data.slot.guest_name : '';
+                    showCheckinNotification(guestName ? `✅ ${guestName} さん 入場OK` : '入場完了しました');
                     playSuccessSound();
                     updateReservations();
                     html5QrCodeScanner.pause(true);
@@ -1343,7 +1286,8 @@
                     }, SUCCESS_PAUSE_MS);
                 } else if (data.message === '既に入場済みです。') {
                     displayReservationDetails(data);
-                    showCheckinNotification('既に入場済みです', true);
+                    const dupName = data.slot && data.slot.guest_name ? data.slot.guest_name : '';
+                    showCheckinNotification(dupName ? `${dupName} さんは既に入場済みです` : '既に入場済みです', true);
                     playErrorSound();
                 } else {
                     showNotification(data.message || '確認できませんでした', 'error');
@@ -1370,11 +1314,13 @@
         function playSuccessSound() {
             dom.successSound.currentTime = 0;
             dom.successSound.play().catch(error => console.log("音声再生エラー:", error));
+            if (navigator.vibrate) navigator.vibrate(200); // 騒がしい会場向け（対応端末のみ）
         }
 
         function playErrorSound() {
             dom.errorSound.currentTime = 0;
             dom.errorSound.play().catch(error => console.log("音声再生エラー:", error));
+            if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 100]); // エラーは成功と違うパターン
         }
 
         function displayReservationDetails(data) {
@@ -1471,7 +1417,7 @@
                             <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
                                 <button class="btn btn-outline" style="font-size:0.75rem;padding:0.3rem 0.6rem;" onclick="copyGuestUrl('${guestUrl}')">🔗 URL</button>
                                 ${!slot.used
-                                    ? `<button class="btn btn-success" style="font-size:0.75rem;padding:0.3rem 0.6rem;" onclick="checkInSlot('${slot.id}')">入場</button>`
+                                    ? `<button class="btn btn-success" style="font-size:0.75rem;padding:0.3rem 0.6rem;" onclick="checkInSlot('${slot.id}', '${slot.guest_name}', this)">入場</button>`
                                     : `<button class="btn btn-outline" style="font-size:0.75rem;padding:0.3rem 0.6rem;" onclick="uncheckInSlot('${slot.id}')">取消</button>`
                                 }
                                 <button class="btn btn-danger" style="font-size:0.75rem;padding:0.3rem 0.6rem;" onclick="deleteSlot('${slot.id}', '${slot.guest_name}')">削除</button>
@@ -1578,18 +1524,22 @@
         }
 
 
-        async function checkInSlot(id) {
+        async function checkInSlot(id, name, btn) {
+            if (name && !confirm(`「${name}」さんをチェックインしますか？`)) return;
+            if (btn) { btn.disabled = true; btn.textContent = '処理中…'; }
             try {
                 const res = await authFetch(`${API_BASE_URL}/api/admin/guest-slots/${id}/check-in`, { method: 'POST' });
                 const data = await res.json();
                 if (res.ok) {
-                    showNotification('チェックイン完了', 'success');
+                    showNotification(name ? `「${name}」さんをチェックインしました` : 'チェックイン完了', 'success');
                     updateReservations();
                 } else {
                     showNotification(data.message || 'チェックインに失敗しました。', 'error');
+                    if (btn) { btn.disabled = false; btn.textContent = '入場'; }
                 }
             } catch (e) {
                 showNotification('通信エラーが発生しました。', 'error');
+                if (btn) { btn.disabled = false; btn.textContent = '入場'; }
             }
         }
 
@@ -2525,32 +2475,6 @@
                 updateTestModeUI();
             } catch (error) {
                 showNotification("切り替えに失敗しました。", "error");
-            }
-        }
-
-        async function exportReportData() {
-            try {
-                const response = await authFetch(`${API_BASE_URL}/api/export-report`, {
-                    method: "GET"
-                });
-                if (!response.ok) {
-                    throw new Error("レポートのエクスポートに失敗しました。");
-                }
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                const now = new Date();
-                const dateStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
-                a.download = `report_${dateStr}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                showNotification("レポートをエクスポートしました。", "success");
-            } catch (error) {
-                console.error("レポートエクスポートエラー:", error);
-                showNotification("レポートのエクスポートに失敗しました。", "error");
             }
         }
 
