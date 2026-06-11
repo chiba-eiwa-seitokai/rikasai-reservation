@@ -931,6 +931,12 @@
                         });
                     }
 
+                    // 本番環境ではテストタブを非表示
+                    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                        const testTabItem = document.querySelector('[data-target="tab-test"]');
+                        if (testTabItem) testTabItem.style.display = 'none';
+                    }
+
                     // 初期タブの表示
                     const activeTab = dom.tabList.querySelector(".tab-item.is-active");
                     if (activeTab) {
