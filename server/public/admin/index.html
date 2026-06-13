@@ -847,7 +847,7 @@
                 "Authorization": `Bearer ${token}`
             };
             const response = await fetch(url, options);
-            if (response.status === 401 || response.status === 403) {
+            if (response.status === 401) {
                 forceLogout();
                 throw new Error('セッションが期限切れです。再ログインしてください。');
             }
@@ -2435,6 +2435,11 @@
         async function loadTestStatus() {
             try {
                 const response = await authFetch("/api/admin/test/status");
+                if (response.status === 403) {
+                    const statusEl = document.getElementById('test-mode-status');
+                    if (statusEl) statusEl.innerHTML = '⚠️ テスト機能は本番環境では無効です。';
+                    return;
+                }
                 const data = await response.json();
                 isFixedOtpMode = data.isFixedOtpMode;
                 updateTestModeUI();
