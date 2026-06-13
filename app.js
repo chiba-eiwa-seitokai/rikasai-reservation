@@ -1194,19 +1194,31 @@ app.post('/api/student/claim-slot', authenticateStudent, [
         }
 
         const newToken = crypto.randomBytes(24).toString('hex');
+        const originalOwnerEmail = row.student_email;
         // transfer_code がまだ有効な行だけを更新し、同じコードの同時受け取りを防ぐ
-        const [claimedRows] = await sequelize.query(
-            `UPDATE "GuestSlots" SET "student_email" = :email, "student_name" = :name, "guest_name" = :gname, "token" = :token, "transfer_code" = NULL, "transfer_expires_at" = NULL WHERE "id" = :id AND "transfer_code" = :code AND "used" = false RETURNING "id"`,
-            { replacements: {
-                email: encryptDeterministic(req.student.email),
-                name: encrypt(req.student.name),
-                gname: encrypt('（名前未設定）'),
-                token: newToken,
-                id: row.id,
-                code
-            }}
-        );
-        if (!claimedRows || claimedRows.length === 0) {
+        // トランザクションで枠の再割り当てと譲渡者の上限デクリメントを原子的に実行
+        let claimed = false;
+        await sequelize.transaction(async (t) => {
+            const [claimedRows] = await sequelize.query(
+                `UPDATE "GuestSlots" SET "student_email" = :email, "student_name" = :name, "guest_name" = :gname, "token" = :token, "transfer_code" = NULL, "transfer_expires_at" = NULL WHERE "id" = :id AND "transfer_code" = :code AND "used" = false RETURNING "id"`,
+                { replacements: {
+                    email: encryptDeterministic(req.student.email),
+                    name: encrypt(req.student.name),
+                    gname: encrypt('（名前未設定）'),
+                    token: newToken,
+                    id: row.id,
+                    code
+                }, transaction: t }
+            );
+            if (!claimedRows || claimedRows.length === 0) return;
+            claimed = true;
+            // 譲渡者の招待枠上限を1減らす（譲渡→新規作成の無限ループを防ぐ）
+            await sequelize.query(
+                `UPDATE "Students" SET "max_guest_slots" = COALESCE("max_guest_slots", :default) - 1 WHERE "email" = :originalEmail`,
+                { replacements: { default: GUEST_SLOTS_PER_STUDENT, originalEmail: originalOwnerEmail }, transaction: t }
+            );
+        });
+        if (!claimed) {
             return res.status(409).json({ message: 'この譲渡コードは既に使用されました。' });
         }
 
