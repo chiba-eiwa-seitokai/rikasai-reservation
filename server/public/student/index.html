@@ -251,8 +251,9 @@
             <div id="form-login" class="fade-in">
                 <div class="form-group">
                     <label class="form-label" for="login-email">学校メールアドレス</label>
-                    <input class="form-input" type="email" id="login-email" placeholder="xxxx@biblos.ac.jp"
+                    <input class="form-input" type="email" id="login-email" placeholder="例: b2026123@biblos.ac.jp"
                         autocomplete="email">
+                    <p class="help" style="font-size:0.78rem; color:var(--color-text-sub); margin-top:0.35rem;">先頭のアルファベット（学年の記号 g/r/b など）を忘れずに入力してください。</p>
                 </div>
                 <p id="login-error" class="help is-danger" style="display:none;"></p>
                 <button class="btn btn-primary" style="width:100%;" onclick="sendLoginOtp()">認証コードを送信</button>
@@ -262,8 +263,9 @@
             <div id="form-register" class="fade-in" style="display:none;">
                 <div class="form-group">
                     <label class="form-label" for="reg-email">学校メールアドレス</label>
-                    <input class="form-input" type="email" id="reg-email" placeholder="xxxx@biblos.ac.jp"
+                    <input class="form-input" type="email" id="reg-email" placeholder="例: b2026123@biblos.ac.jp"
                         autocomplete="email">
+                    <p class="help" style="font-size:0.78rem; color:var(--color-text-sub); margin-top:0.35rem;">先頭のアルファベット（学年の記号 g/r/b など）を忘れずに入力してください。番号だけにならないよう注意。</p>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="reg-name">氏名</label>
@@ -461,6 +463,12 @@
                 return;
             }
 
+            if (!isValidSchoolEmail(email)) {
+                errEl.textContent = '学校メールは先頭にアルファベット（学年の記号 g/r/b など）が付きます（例: b2026123@biblos.ac.jp）。番号だけになっていないか確認してください。';
+                errEl.style.display = 'block';
+                return;
+            }
+
             setLoading(true);
             try {
                 const res = await fetch('/api/student/login-otp', {
@@ -503,6 +511,12 @@
 
             if (!privacyAgree) {
                 errEl.textContent = 'プライバシーポリシーへの同意が必要です。';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            if (!isValidSchoolEmail(email)) {
+                errEl.textContent = '学校メールは先頭にアルファベット（学年の記号 g/r/b など）が付きます（例: b2026123@biblos.ac.jp）。番号だけになっていないか確認してください。';
                 errEl.style.display = 'block';
                 return;
             }
@@ -1102,6 +1116,12 @@
             document.querySelector('.tab-bar').style.display = 'flex';
             switchTab('login');
             setLoading(false);
+        }
+
+        // 学校メールのローカル部は必ず英字始まり（生徒 g/r/b+数字, 職員 m_fujii 等）。
+        // 接頭辞を付け忘れた数字だけのアドレス（例: 2026330@...）は存在せずバウンスするため弾く。
+        function isValidSchoolEmail(email) {
+            return /^[a-zA-Z]/.test(email.trim());
         }
 
         function escHtml(str) {

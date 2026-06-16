@@ -1024,6 +1024,12 @@ const STUDENT_JWT_SECRET = process.env.JWT_SECRET + '_student';
 // （固定OTPのテストデータがDBに残っていた場合にバックドア化するのを防ぐ）
 const isBlockedTestEmail = (email) => IS_PRODUCTION && email.startsWith('test_student_');
 
+// 学校配布アドレスのローカル部は必ず英字で始まる（生徒: g/r/b + 数字、職員: m_fujii 等）。
+// 接頭辞の英字を付け忘れて数字だけ（例: 2026330@biblos.ac.jp）になっていると
+// 実在しないアドレスとなり、OTPメールが配信失敗(バウンス)する。送信前に弾く。
+const INVALID_LOCAL_PART_MSG = '学校メールアドレスの形式が正しくありません。先頭にアルファベット（学年の記号）が付きます（例: b2026123@biblos.ac.jp）。番号だけになっていないか確認してください。';
+const hasValidSchoolLocalPart = (email) => /^[a-z]/.test(email);
+
 // ログイン用OTP送信（既存アカウント、メールのみ）
 app.post('/api/student/login-otp', otpLimiter, [
     body('email').isEmail().withMessage('有効なメールアドレスを入力してください')
@@ -1038,6 +1044,10 @@ app.post('/api/student/login-otp', otpLimiter, [
 
         if (!normalizedEmail.endsWith(ALLOWED_DOMAIN) || isBlockedTestEmail(normalizedEmail)) {
             return res.status(403).json({ message: `学校配布のメールアドレス（${ALLOWED_DOMAIN}）のみ使用できます。` });
+        }
+
+        if (!hasValidSchoolLocalPart(normalizedEmail)) {
+            return res.status(400).json({ message: INVALID_LOCAL_PART_MSG });
         }
 
         const student = await Student.findOne({ where: { email: encryptDeterministic(normalizedEmail) } });
@@ -1102,6 +1112,11 @@ app.post('/api/student/request-otp', otpLimiter, [
         // ドメイン制限
         if (!normalizedEmail.endsWith(ALLOWED_DOMAIN) || isBlockedTestEmail(normalizedEmail)) {
             return res.status(403).json({ message: `学校配布のメールアドレス（${ALLOWED_DOMAIN}）のみ使用できます。` });
+        }
+
+        // ローカル部の形式チェック（接頭辞の英字付け忘れによる存在しないアドレスへの誤送信を防止）
+        if (!hasValidSchoolLocalPart(normalizedEmail)) {
+            return res.status(400).json({ message: INVALID_LOCAL_PART_MSG });
         }
 
         // OTP生成 (6桁)
