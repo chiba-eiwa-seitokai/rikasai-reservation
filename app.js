@@ -98,7 +98,10 @@ app.use('/student', express.static(path.join(__dirname, 'server/public/student')
 app.use(            express.static(path.join(__dirname, 'server/public'),         staticOptions));
 
 // DB initialization (PostgreSQL)
-const { sequelize, User, Student, GuestSlot, Op, decrypt, decryptDeterministic, encrypt, encryptDeterministic } = require('./server/db-postgres');
+const { sequelize, User, Student, GuestSlot, Config, AuditLog, Op, decrypt, decryptDeterministic, encrypt, encryptDeterministic, getConfig, setConfig, loadConfigCache } = require('./server/db-postgres');
+
+// アップロード (CSVインポート用)。Vercelはファイルシステム書込制限があるため memoryStorage を使う。
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 
 // テスト用グローバル設定（本番環境では常に無効）
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -126,6 +129,8 @@ const shouldRunDbSync = !IS_PRODUCTION || process.env.RUN_DB_SYNC === 'true';
             console.log('Admin user created');
         }
     }
+    // 設定キャッシュの初回ロード (失敗してもデフォルトで動作するため握りつぶす)
+    try { await loadConfigCache(); } catch (e) { console.error('Initial config cache load error:', e.message); }
 })().catch(err => console.error('Database sync error:', err));
 
 // 注意: エラーハンドリングミドルウェアはファイル末尾に配置
@@ -147,12 +152,31 @@ const authenticateToken = (req, res, next) => {
 // 認可ミドルウェア
 const authorizeRole = (roles) => {
     return (req, res, next) => {
+        // developer は admin 系の全権限を持つ (デバッグ用の上位ロール)
+        if (req.user.role === 'developer') return next();
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({ message: 'アクセス権がありません。' });
         }
         next();
     };
 };
+
+// 監査ログ記録ヘルパー。失敗しても本処理を止めない (best-effort)。
+// detail には個人情報を入れない (ID・件数・設定値など非個人情報のみ)。
+async function logAudit(req, action, detail = '') {
+    try {
+        await AuditLog.create({
+            actor: req.user ? req.user.username : 'system',
+            actor_role: req.user ? req.user.role : null,
+            action,
+            detail: String(detail).slice(0, 500),
+            ip: req.ip,
+            createdAt: new Date()
+        });
+    } catch (e) {
+        console.error('audit log error:', e.message);
+    }
+}
 
 // メールアカウント設定
 const emailAccounts = {
@@ -266,6 +290,7 @@ app.post('/api/login', loginLimiter, async (req, res, next) => {
                 process.env.JWT_SECRET,
                 { expiresIn: '12h' } // 受付端末が開催時間中（朝〜夕方）に失効しないよう12時間
             );
+            await logAudit({ user: { username: user.username, role: user.role }, ip: req.ip }, 'login', `role=${user.role}`);
             res.json({ success: true, token });
         } else {
             res.status(401).json({ success: false, message: '無効な資格情報' });
@@ -415,6 +440,7 @@ app.post('/api/verify', authenticateToken, async (req, res, next) => {
             });
         }
 
+        await logAudit(req, 'checkin.scan', `slotId=${slot.id}`);
         return res.json({
             message: '入場が承認されました。',
             slot: {
@@ -472,6 +498,7 @@ app.post('/api/admin/guest-slots/:id/check-in', authenticateToken, authorizeRole
             { where: { id, used: false } }
         );
         if (affectedCount === 0) return res.json({ message: '既に入場済みです。' });
+        await logAudit(req, 'checkin', `slotId=${id}`);
         res.json({ message: 'チェックイン完了' });
     } catch (error) {
         next(error);
@@ -526,6 +553,7 @@ app.put('/api/admin/students/:id', authenticateToken, authorizeRole(['admin']), 
         if (req.body.grade_class !== undefined) updates.grade_class = req.body.grade_class || null;
         
         await Student.update(updates, { where: { id: req.params.id } });
+        await logAudit(req, 'student.update', `studentId=${req.params.id}`);
         res.json({ message: '生徒情報を更新しました。' });
     } catch (error) { next(error); }
 });
@@ -537,6 +565,7 @@ app.delete('/api/admin/students/:id', authenticateToken, authorizeRole(['admin']
         if (!student) return res.status(404).json({ message: '生徒が見つかりません。' });
         await GuestSlot.destroy({ where: { student_email: encryptDeterministic(student.email) } });
         await Student.destroy({ where: { id: req.params.id } });
+        await logAudit(req, 'student.delete', `studentId=${req.params.id}`);
         res.json({ message: `${student.name} のアカウントと招待スロットを削除しました。` });
     } catch (error) { next(error); }
 });
@@ -545,7 +574,10 @@ app.delete('/api/admin/students/:id', authenticateToken, authorizeRole(['admin']
 app.delete('/api/admin/guest-slots/:id', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
     try {
         const deleted = await GuestSlot.destroy({ where: { id: req.params.id } });
-        if (deleted > 0) res.json({ message: 'スロットを削除しました。' });
+        if (deleted > 0) {
+            await logAudit(req, 'slot.delete', `slotId=${req.params.id}`);
+            res.json({ message: 'スロットを削除しました。' });
+        }
         else res.status(404).json({ message: 'スロットが見つかりません。' });
     } catch (error) { next(error); }
 });
@@ -575,6 +607,7 @@ app.post('/api/admin/students/:id/guest-slots', authenticateToken, authorizeRole
             used: false
         });
 
+        await logAudit(req, 'slot.create', `studentId=${req.params.id} slotId=${slot.id}`);
         res.json({ message: 'ゲストを追加しました。', slot });
     } catch (error) { next(error); }
 });
@@ -604,6 +637,7 @@ app.post('/api/admin/guest-slots/:id/uncheck-in', authenticateToken, authorizeRo
         const slot = await GuestSlot.findOne({ where: { id: req.params.id } });
         if (!slot) return res.status(404).json({ message: 'スロットが見つかりません。' });
         await GuestSlot.update({ used: false, checked_in_at: null }, { where: { id: req.params.id } });
+        await logAudit(req, 'checkin.undo', `slotId=${req.params.id}`);
         res.json({ message: 'チェックインを取り消しました。' });
     } catch (error) { next(error); }
 });
@@ -615,12 +649,57 @@ app.get('/api/admin/settings', authenticateToken, authorizeRole(['admin']), asyn
         const totalSlots = await GuestSlot.count();
         const checkedInSlots = await GuestSlot.count({ where: { used: true } });
         res.json({
-            guestSlotsPerStudent: parseInt(process.env.GUEST_SLOTS_PER_STUDENT || '3'),
-            systemName: process.env.SYSTEM_NAME || '梨花祭2026',
+            guestSlotsPerStudent: parseInt(await getConfig('guestSlotsPerStudent'), 10),
+            systemName: await getConfig('systemName'),
+            festivalDates: await getConfig('festivalDates'),
             totalStudents,
             totalSlots,
             checkedInSlots
         });
+    } catch (error) { next(error); }
+});
+
+// システム設定の更新 (システム名・招待枠数・開催日)
+app.put('/api/admin/settings', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
+    try {
+        const { systemName, guestSlotsPerStudent, festivalDates } = req.body;
+        const changes = [];
+
+        if (systemName !== undefined) {
+            const name = String(systemName).trim();
+            if (!name || name.length > 100) {
+                return res.status(400).json({ message: 'システム名は1〜100文字で入力してください。' });
+            }
+            await setConfig('systemName', name);
+            changes.push(`systemName=${name}`);
+        }
+
+        if (guestSlotsPerStudent !== undefined) {
+            const slots = parseInt(guestSlotsPerStudent, 10);
+            if (!Number.isInteger(slots) || slots < 1 || slots > 50) {
+                return res.status(400).json({ message: '生徒あたり招待枠数は1〜50の整数で入力してください。' });
+            }
+            await setConfig('guestSlotsPerStudent', slots);
+            changes.push(`guestSlotsPerStudent=${slots}`);
+        }
+
+        if (festivalDates !== undefined) {
+            const raw = String(festivalDates).trim();
+            const dates = raw.split(',').map(d => d.trim()).filter(Boolean);
+            if (dates.length === 0 || !dates.every(d => /^\d{4}-\d{2}-\d{2}$/.test(d))) {
+                return res.status(400).json({ message: '開催日は YYYY-MM-DD 形式のカンマ区切りで入力してください。' });
+            }
+            const normalized = dates.join(',');
+            await setConfig('festivalDates', normalized);
+            changes.push(`festivalDates=${normalized}`);
+        }
+
+        if (changes.length === 0) {
+            return res.status(400).json({ message: '変更内容がありません。' });
+        }
+
+        await logAudit(req, 'settings.update', changes.join(' / '));
+        res.json({ message: 'システム設定を更新しました。' });
     } catch (error) { next(error); }
 });
 
@@ -638,6 +717,7 @@ app.post('/api/admin/change-password', authenticateToken, authorizeRole(['admin'
         if (!isValid) return res.status(401).json({ message: '現在のパスワードが正しくありません。' });
         const hashed = await bcrypt.hash(newPassword, 10);
         await User.update({ password: hashed }, { where: { username: req.user.username } });
+        await logAudit(req, 'password.change', `username=${req.user.username}`);
         res.json({ message: 'パスワードを変更しました。' });
     } catch (error) { next(error); }
 });
@@ -654,12 +734,16 @@ app.post('/api/admin/accounts', authenticateToken, authorizeRole(['admin']), asy
     try {
         const { username, password, role } = req.body;
         if (!username || !password || !role) return res.status(400).json({ message: '入力が不足しています。' });
-        
+        const allowedRoles = ['admin', 'reception', 'scanner', 'developer'];
+        if (!allowedRoles.includes(role)) return res.status(400).json({ message: '不正な権限が指定されました。' });
+        if (password.length < 8) return res.status(400).json({ message: 'パスワードは8文字以上で設定してください。' });
+
         const existing = await User.findOne({ where: { username } });
         if (existing) return res.status(400).json({ message: 'そのユーザー名は既に使用されています。' });
 
         const hashed = await bcrypt.hash(password, 10);
         await User.create({ username, password: hashed, role });
+        await logAudit(req, 'account.create', `username=${username} role=${role}`);
         res.json({ message: 'アカウントを作成しました。' });
     } catch (error) { next(error); }
 });
@@ -673,6 +757,7 @@ app.delete('/api/admin/accounts/:id', authenticateToken, authorizeRole(['admin']
             return res.status(400).json({ message: '自分自身のアカウントは削除できません。' });
         }
         await User.destroy({ where: { id } });
+        await logAudit(req, 'account.delete', `username=${user.username} role=${user.role}`);
         res.json({ message: 'アカウントを削除しました。' });
     } catch (error) { next(error); }
 });
@@ -711,10 +796,159 @@ app.get('/api/export-report', authenticateToken, authorizeRole(['admin']), async
     res.status(404).json({ message: 'This endpoint is deprecated.' });
 });
 
+// ====== 操作履歴 (監査ログ) ======
+app.get('/api/admin/audit-logs', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
+    try {
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const pageSize = Math.min(200, Math.max(1, parseInt(req.query.pageSize, 10) || 50));
+        const where = {};
+        if (req.query.action) where.action = req.query.action;
+        const { count, rows } = await AuditLog.findAndCountAll({
+            where,
+            order: [['createdAt', 'DESC']],
+            limit: pageSize,
+            offset: (page - 1) * pageSize
+        });
+        res.json({ logs: rows, total: count, page, pageSize });
+    } catch (error) { next(error); }
+});
+
+// ====== データ初期化 (本番でも admin/developer が実行可能・confirm必須) ======
+app.post('/api/admin/data/reset', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
+    try {
+        const { confirm, mode } = req.body;
+        if (confirm !== 'RESET') {
+            return res.status(400).json({ message: '確認文字列が正しくありません。「RESET」と入力してください。' });
+        }
+        if (mode === 'slots_only') {
+            await GuestSlot.destroy({ where: {}, truncate: true, cascade: true });
+            await logAudit(req, 'data.reset', 'mode=slots_only');
+            return res.json({ message: '招待スロットを全て削除しました。' });
+        }
+        // mode === 'all'
+        await GuestSlot.destroy({ where: {}, truncate: true, cascade: true });
+        await Student.destroy({ where: {}, truncate: true, cascade: true });
+        await logAudit(req, 'data.reset', 'mode=all');
+        res.json({ message: 'ゲスト・生徒データを全て削除しました。(アカウントは保持されます)' });
+    } catch (error) { next(error); }
+});
+
+// ====== 生徒CSVインポート ======
+// ヘッダ必須: email,name,grade_class[,max_guest_slots]
+app.post('/api/admin/import/students', authenticateToken, authorizeRole(['admin']), upload.single('file'), async (req, res, next) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'CSVファイルが選択されていません。' });
+
+        // BOM除去してパース
+        const text = req.file.buffer.toString('utf8').replace(/^﻿/, '');
+        const records = await new Promise((resolve, reject) => {
+            const out = [];
+            const stream = require('stream').Readable.from(text);
+            stream.pipe(csvParser())
+                .on('data', (row) => out.push(row))
+                .on('end', () => resolve(out))
+                .on('error', reject);
+        });
+
+        let created = 0, updated = 0, skipped = 0;
+        const errors = [];
+        const seenEmails = new Set();
+
+        for (let i = 0; i < records.length; i++) {
+            const rowNum = i + 2; // ヘッダ行を考慮
+            const r = records[i];
+            try {
+                const email = String(r.email || '').trim().toLowerCase();
+                const name = String(r.name || '').trim();
+                const grade_class = r.grade_class !== undefined ? String(r.grade_class).trim() : undefined;
+                const hasMaxSlots = r.max_guest_slots !== undefined && String(r.max_guest_slots).trim() !== '';
+                const maxSlots = hasMaxSlots ? parseInt(r.max_guest_slots, 10) : undefined;
+
+                if (!email || !name) { skipped++; errors.push({ row: rowNum, message: 'email または name が空です。' }); continue; }
+                if (!email.endsWith(ALLOWED_DOMAIN)) { skipped++; errors.push({ row: rowNum, message: `ドメインが ${ALLOWED_DOMAIN} ではありません。` }); continue; }
+                if (seenEmails.has(email)) { skipped++; errors.push({ row: rowNum, message: 'CSV内で重複したメールです。' }); continue; }
+                if (hasMaxSlots && (!Number.isInteger(maxSlots) || maxSlots < 0 || maxSlots > 50)) {
+                    skipped++; errors.push({ row: rowNum, message: 'max_guest_slots は0〜50の整数で指定してください。' }); continue;
+                }
+                seenEmails.add(email);
+
+                const existing = await Student.findOne({ where: { email } });
+                if (existing) {
+                    existing.name = escapeHtml(name);
+                    if (grade_class !== undefined) existing.grade_class = grade_class ? escapeHtml(grade_class) : null;
+                    if (hasMaxSlots) existing.max_guest_slots = maxSlots;
+                    await existing.save();
+                    updated++;
+                } else {
+                    await Student.create({
+                        id: crypto.randomBytes(8).toString('hex'),
+                        email,
+                        name: escapeHtml(name),
+                        grade_class: grade_class ? escapeHtml(grade_class) : null,
+                        max_guest_slots: hasMaxSlots ? maxSlots : null
+                    });
+                    created++;
+                }
+            } catch (rowErr) {
+                skipped++;
+                errors.push({ row: rowNum, message: rowErr.message });
+            }
+        }
+
+        await logAudit(req, 'students.import', `created=${created} updated=${updated} skipped=${skipped}`);
+        res.json({ created, updated, skipped, errors });
+    } catch (error) { next(error); }
+});
+
+// ====== メール設定: 状態確認 ======
+app.get('/api/admin/email/status', authenticateToken, authorizeRole(['admin']), (req, res, next) => {
+    try {
+        const maskEmail = (e) => {
+            if (!e) return null;
+            const [local, domain] = e.split('@');
+            if (!domain) return '***';
+            const head = local.slice(0, 2);
+            return `${head}${'*'.repeat(Math.max(1, local.length - 2))}@${domain}`;
+        };
+        const accounts = Object.keys(emailAccounts).map(key => ({
+            key,
+            user: maskEmail(emailAccounts[key].user),
+            configured: !!(emailAccounts[key].user && emailAccounts[key].pass),
+            active: emailAccounts[key].active
+        }));
+        res.json({ accounts });
+    } catch (error) { next(error); }
+});
+
+// ====== メール設定: テスト送信 ======
+app.post('/api/admin/email/test', authenticateToken, authorizeRole(['admin']), async (req, res, next) => {
+    try {
+        const { to } = req.body;
+        if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(to).trim())) {
+            return res.status(400).json({ message: '有効な宛先メールアドレスを入力してください。' });
+        }
+        const systemName = await getConfig('systemName');
+        await sendEmailWithFailover({
+            to: String(to).trim(),
+            subject: `[${systemName}] テストメール`,
+            html: `<p>これは管理画面からのテストメールです。</p><p>このメールが届いていれば、メール送信設定は正常に動作しています。</p><p>送信日時: ${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>`
+        });
+        const maskedTo = String(to).trim().replace(/^(.{2}).*(@.*)$/, '$1***$2');
+        await logAudit(req, 'email.test', `to=${maskedTo}`);
+        res.json({ message: 'テストメールを送信しました。' });
+    } catch (error) {
+        console.error('テストメール送信エラー:', error.message);
+        res.status(500).json({ message: 'テストメールの送信に失敗しました: ' + error.message });
+    }
+});
+
 // ===== テスト支援機能 API (管理者のみ・本番環境では無効) =====
 
-app.use('/api/admin/test', (req, res, next) => {
-    if (IS_PRODUCTION) return res.status(403).json({ message: 'テスト機能は本番環境では無効です。' });
+app.use('/api/admin/test', authenticateToken, (req, res, next) => {
+    // 本番環境では developer ロールのみテスト機能を利用可能
+    if (IS_PRODUCTION && req.user.role !== 'developer') {
+        return res.status(403).json({ message: 'テスト機能は本番環境では無効です。' });
+    }
     next();
 });
 
@@ -783,7 +1017,6 @@ app.get('/student', (req, res) => {
 // ===== 生徒本人確認 (OTP) =====
 
 const ALLOWED_DOMAIN = '@biblos.ac.jp';
-const GUEST_SLOTS_PER_STUDENT = parseInt(process.env.GUEST_SLOTS_PER_STUDENT || '3', 10);
 const STUDENT_JWT_SECRET = process.env.JWT_SECRET + '_student';
 
 // テスト用アカウント(test_student_*)は本番では一切認証させない
@@ -984,7 +1217,8 @@ const authenticateStudent = (req, res, next) => {
 app.get('/api/student/dashboard', authenticateStudent, async (req, res, next) => {
     try {
         const student = await Student.findOne({ where: { email: encryptDeterministic(req.student.email) } });
-        const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : GUEST_SLOTS_PER_STUDENT;
+        const defaultMaxSlots = parseInt(await getConfig('guestSlotsPerStudent'), 10);
+        const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : defaultMaxSlots;
 
         const [slotsRaw] = await sequelize.query(
             `SELECT "id", "token", "guest_name", "used", "createdAt", "transfer_code", "transfer_expires_at" FROM "GuestSlots" WHERE "student_email" = :email`,
@@ -1044,6 +1278,8 @@ app.post('/api/student/generate-links', authenticateStudent, [
         // 既存スロット数と上限チェック
         // 同時リクエストで上限を超えないよう、生徒行をロックした上でcount→createを行う
         const token = crypto.randomBytes(24).toString('hex');
+        // ロック保持時間を短くするためトランザクション前にデフォルト枠数を取得
+        const defaultMaxSlots = parseInt(await getConfig('guestSlotsPerStudent'), 10);
         let slot;
         try {
             slot = await sequelize.transaction(async (t) => {
@@ -1052,7 +1288,7 @@ app.post('/api/student/generate-links', authenticateStudent, [
                     transaction: t,
                     lock: t.LOCK.UPDATE
                 });
-                const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : GUEST_SLOTS_PER_STUDENT;
+                const maxSlots = student && student.max_guest_slots !== null ? student.max_guest_slots : defaultMaxSlots;
 
                 const existingCount = await GuestSlot.count({
                     where: { student_email: encryptDeterministic(req.student.email) },
@@ -1108,8 +1344,8 @@ app.put('/api/student/guest-slots/:id', authenticateStudent, async (req, res, ne
             return res.status(400).json({ message: 'ゲストの名前は50文字以内で入力してください。' });
         }
 
-        // 当日判定 (環境変数でカンマ区切りの日付指定を対応)
-        const festivalDatesStr = process.env.FESTIVAL_DATES || '2026-07-17,2026-07-18';
+        // 当日判定 (DB設定→環境変数→デフォルトでカンマ区切りの日付指定を対応)
+        const festivalDatesStr = await getConfig('festivalDates');
         const festivalDates = festivalDatesStr.split(',').map(d => d.trim());
         
         // 日本時間での今日の日付を取得(YYYY-MM-DD形式にするためフォーマット調整)
@@ -1195,6 +1431,7 @@ app.post('/api/student/claim-slot', authenticateStudent, [
 
         const newToken = crypto.randomBytes(24).toString('hex');
         const originalOwnerEmail = row.student_email;
+        const defaultSlots = parseInt(await getConfig('guestSlotsPerStudent'), 10);
         // transfer_code がまだ有効な行だけを更新し、同じコードの同時受け取りを防ぐ
         // トランザクションで枠の再割り当てと譲渡者の上限デクリメントを原子的に実行
         let claimed = false;
@@ -1215,7 +1452,7 @@ app.post('/api/student/claim-slot', authenticateStudent, [
             // 譲渡者の招待枠上限を1減らす（譲渡→新規作成の無限ループを防ぐ）
             await sequelize.query(
                 `UPDATE "Students" SET "max_guest_slots" = COALESCE("max_guest_slots", :default) - 1 WHERE "email" = :originalEmail`,
-                { replacements: { default: GUEST_SLOTS_PER_STUDENT, originalEmail: originalOwnerEmail }, transaction: t }
+                { replacements: { default: defaultSlots, originalEmail: originalOwnerEmail }, transaction: t }
             );
         });
         if (!claimed) {
