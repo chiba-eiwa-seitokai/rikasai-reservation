@@ -1454,6 +1454,12 @@ app.post('/api/student/claim-slot', authenticateStudent, [
                 `UPDATE "Students" SET "max_guest_slots" = COALESCE("max_guest_slots", :default) - 1 WHERE "email" = :originalEmail`,
                 { replacements: { default: defaultSlots, originalEmail: originalOwnerEmail }, transaction: t }
             );
+            // 受け取った側の招待枠上限を1増やす（譲渡分は受け手の自作枠を消費しない＝送り手の -1 と対称）。
+            // 受け取った枠は所有枠としてカウントされるため、+1しないと自分の枠を作れなくなる。
+            await sequelize.query(
+                `UPDATE "Students" SET "max_guest_slots" = COALESCE("max_guest_slots", :default) + 1 WHERE "email" = :recipientEmail`,
+                { replacements: { default: defaultSlots, recipientEmail: encryptDeterministic(req.student.email) }, transaction: t }
+            );
         });
         if (!claimed) {
             return res.status(409).json({ message: 'この譲渡コードは既に使用されました。' });
