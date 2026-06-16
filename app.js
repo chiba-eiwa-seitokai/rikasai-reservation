@@ -308,6 +308,7 @@ app.get('/api/report', authenticateToken, authorizeRole(['admin']), async (req, 
 
         const slots = slotsRaw.map(s => ({
             ...s,
+            student_name: decrypt(s.student_name),
             student_email: decryptDeterministic(s.student_email)
         }));
         const students = studentsRaw.map(s => ({
