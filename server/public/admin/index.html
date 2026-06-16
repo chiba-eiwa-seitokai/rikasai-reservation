@@ -432,6 +432,7 @@
                                         <option value="admin">管理者 (全権限)</option>
                                         <option value="reception">受付担当 (一覧＋スキャン)</option>
                                         <option value="scanner">スキャン担当 (スキャンのみ)</option>
+                                        <option value="developer">開発者 (全権限＋テスト)</option>
                                     </select>
                                 </div>
                                 <button class="btn btn-primary" onclick="adminCreateAccount()" style="white-space:nowrap;">追加</button>
@@ -453,11 +454,111 @@
                             </div>
                         </div>
 
+                        <!-- システム設定編集 -->
+                        <div class="glass-card">
+                            <h2 class="section-title">🛠️ システム設定の編集</h2>
+                            <div class="form-group">
+                                <label class="form-label">システム名</label>
+                                <input class="form-input" type="text" id="set-system-name" placeholder="例: 梨花祭2026">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">生徒あたり招待枠数 (1〜50)</label>
+                                <input class="form-input" type="number" id="set-slots-per-student" min="1" max="50" placeholder="例: 3">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">開催日 (YYYY-MM-DD、カンマ区切り)</label>
+                                <input class="form-input" type="text" id="set-festival-dates" placeholder="例: 2026-07-17,2026-07-18">
+                            </div>
+                            <button class="btn btn-primary" onclick="saveSystemSettings()" style="width:100%;">設定を保存</button>
+                        </div>
+
+                        <!-- メール設定 -->
+                        <div class="glass-card">
+                            <h2 class="section-title">📧 メール送信設定</h2>
+                            <div id="email-status" style="margin-bottom:1rem; font-size:0.9rem; color:var(--text-secondary);">読み込み中...</div>
+                            <div class="form-group">
+                                <label class="form-label">テスト送信先</label>
+                                <input class="form-input" type="email" id="email-test-to" placeholder="test@example.com">
+                            </div>
+                            <button class="btn btn-primary" onclick="sendTestEmail()" style="width:100%;">テストメールを送信</button>
+                        </div>
+
                         <!-- データエクスポート -->
                         <div class="glass-card">
                             <h2 class="section-title">⬇️ データエクスポート</h2>
                             <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">ゲスト招待一覧をCSVファイルでダウンロードします。Excelで開くことができます。</p>
                             <button class="btn btn-success" onclick="exportCsv()" style="width:100%;">📄 ゲスト一覧CSVをDL</button>
+                        </div>
+
+                        <!-- データ管理 (インポート/初期化) -->
+                        <div class="glass-card" style="grid-column: 1 / -1;">
+                            <h2 class="section-title">🗂️ データ管理 (インポート / 初期化)</h2>
+                            <div style="margin-bottom:1.5rem;">
+                                <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.5rem;">
+                                    生徒CSVをインポートします。ヘッダ必須: <code>email,name,grade_class,max_guest_slots</code>（max_guest_slots は任意）。メールは <code>@biblos.ac.jp</code> のみ。
+                                </p>
+                                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center;">
+                                    <input class="form-input" type="file" id="import-csv-file" accept=".csv" style="flex:1; min-width:200px;">
+                                    <button class="btn btn-primary" onclick="importStudentsCsv()" style="white-space:nowrap;">📥 生徒CSVをインポート</button>
+                                </div>
+                                <div id="import-result" style="margin-top:1rem; font-size:0.85rem;"></div>
+                            </div>
+                            <div style="border-top:1px solid var(--color-border, #ddd); padding-top:1.5rem;">
+                                <h3 style="color:var(--color-danger, #d33); margin:0 0 0.5rem;">⚠️ 危険な操作</h3>
+                                <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1rem;">データを完全に削除します。この操作は取り消せません。アカウント情報は保持されます。</p>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
+                                    <button class="btn btn-danger" onclick="resetAllData('slots_only')">招待スロットのみ削除</button>
+                                    <button class="btn btn-danger" onclick="resetAllData('all')">ゲスト・生徒データを全削除</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 操作履歴 (監査ログ) -->
+                        <div class="glass-card" style="grid-column: 1 / -1;">
+                            <h2 class="section-title">📜 操作履歴</h2>
+                            <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem; align-items:center;">
+                                <select class="form-select" id="audit-filter" onchange="loadAuditLogs(1)" style="max-width:240px;">
+                                    <option value="">すべての操作</option>
+                                    <option value="login">ログイン</option>
+                                    <option value="checkin">チェックイン</option>
+                                    <option value="checkin.scan">QRスキャン入場</option>
+                                    <option value="checkin.undo">チェックイン取消</option>
+                                    <option value="student.update">生徒情報更新</option>
+                                    <option value="student.delete">生徒削除</option>
+                                    <option value="slot.create">スロット作成</option>
+                                    <option value="slot.delete">スロット削除</option>
+                                    <option value="account.create">アカウント作成</option>
+                                    <option value="account.delete">アカウント削除</option>
+                                    <option value="password.change">パスワード変更</option>
+                                    <option value="settings.update">設定変更</option>
+                                    <option value="data.reset">データ初期化</option>
+                                    <option value="students.import">生徒インポート</option>
+                                    <option value="email.test">テストメール</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="loadAuditLogs(1)" style="white-space:nowrap;">🔄 更新</button>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>日時</th>
+                                            <th>操作者</th>
+                                            <th>権限</th>
+                                            <th>操作</th>
+                                            <th>詳細</th>
+                                            <th>IP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="audit-tbody">
+                                        <tr><td colspan="6" style="text-align:center;">読み込み中...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+                                <button class="btn btn-outline" onclick="loadAuditLogs(auditPage - 1)" id="audit-prev">← 前へ</button>
+                                <span id="audit-pageinfo" style="font-size:0.9rem; color:var(--text-secondary);"></span>
+                                <button class="btn btn-outline" onclick="loadAuditLogs(auditPage + 1)" id="audit-next">次へ →</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -931,8 +1032,8 @@
                         });
                     }
 
-                    // 本番環境ではテストタブを非表示
-                    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    // 本番環境ではテストタブを非表示 (developer ロールは本番でも表示)
+                    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && userRole !== 'developer') {
                         const testTabItem = document.querySelector('[data-target="tab-test"]');
                         if (testTabItem) testTabItem.style.display = 'none';
                     }
@@ -1477,14 +1578,159 @@
                 document.getElementById('si-slots').textContent = d.totalSlots + ' 件';
                 document.getElementById('si-checkedin').textContent = d.checkedInSlots + ' 件';
                 document.getElementById('si-slots-per-student').textContent = d.guestSlotsPerStudent + ' 枠';
+                // 編集フォームへ現在値を反映
+                const nameEl = document.getElementById('set-system-name');
+                const slotsEl = document.getElementById('set-slots-per-student');
+                const datesEl = document.getElementById('set-festival-dates');
+                if (nameEl) nameEl.value = d.systemName || '';
+                if (slotsEl) slotsEl.value = d.guestSlotsPerStudent;
+                if (datesEl) datesEl.value = d.festivalDates || '';
             } catch { showNotification('設定の取得に失敗しました。', 'error'); }
 
             try {
                 const payload = parseJwt(localStorage.getItem(TOKEN_KEY));
-                if (payload && payload.role === 'admin') {
+                if (payload && (payload.role === 'admin' || payload.role === 'developer')) {
                     loadAccounts();
+                    loadEmailStatus();
+                    loadAuditLogs(1);
                 }
             } catch(e) {}
+        }
+
+        async function saveSystemSettings() {
+            const systemName = document.getElementById('set-system-name').value.trim();
+            const guestSlotsPerStudent = document.getElementById('set-slots-per-student').value;
+            const festivalDates = document.getElementById('set-festival-dates').value.trim();
+            try {
+                const res = await authFetch(`${API_BASE_URL}/api/admin/settings`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ systemName, guestSlotsPerStudent, festivalDates })
+                });
+                const data = await res.json();
+                showNotification(data.message, res.ok ? 'success' : 'error');
+                if (res.ok) loadSettings();
+            } catch { showNotification('設定の保存に失敗しました。', 'error'); }
+        }
+
+        // === メール設定 ===
+        async function loadEmailStatus() {
+            const el = document.getElementById('email-status');
+            if (!el) return;
+            try {
+                const res = await authFetch(`${API_BASE_URL}/api/admin/email/status`);
+                if (!res.ok) throw new Error();
+                const { accounts } = await res.json();
+                el.innerHTML = accounts.map(a =>
+                    `<div>${a.configured ? '✅' : '⚪'} <strong>${a.key}</strong>: ${a.user || '(未設定)'} ${a.configured ? (a.active ? '<span style="color:var(--success);">有効</span>' : '<span style="color:var(--color-danger);">停止中</span>') : ''}</div>`
+                ).join('') || '送信元アカウントが設定されていません。';
+            } catch { el.textContent = 'メール設定の取得に失敗しました。'; }
+        }
+
+        async function sendTestEmail() {
+            const to = document.getElementById('email-test-to').value.trim();
+            if (!to) { showNotification('テスト送信先を入力してください。', 'warning'); return; }
+            try {
+                const res = await authFetch(`${API_BASE_URL}/api/admin/email/test`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to })
+                });
+                const data = await res.json();
+                showNotification(data.message, res.ok ? 'success' : 'error');
+            } catch { showNotification('テストメールの送信に失敗しました。', 'error'); }
+        }
+
+        // === 生徒CSVインポート ===
+        async function importStudentsCsv() {
+            const fileInput = document.getElementById('import-csv-file');
+            const file = fileInput.files[0];
+            if (!file) { showNotification('CSVファイルを選択してください。', 'warning'); return; }
+            const resultEl = document.getElementById('import-result');
+            resultEl.innerHTML = 'インポート中...';
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await authFetch(`${API_BASE_URL}/api/admin/import/students`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    resultEl.innerHTML = `<span style="color:var(--color-danger);">${data.message || 'インポートに失敗しました。'}</span>`;
+                    return;
+                }
+                let html = `<div style="color:var(--success);">✅ 新規 ${data.created} 件 / 更新 ${data.updated} 件 / スキップ ${data.skipped} 件</div>`;
+                if (data.errors && data.errors.length) {
+                    html += '<div style="margin-top:0.5rem; color:var(--color-danger); max-height:160px; overflow:auto;">' +
+                        data.errors.map(e => `行${e.row}: ${e.message}`).join('<br>') + '</div>';
+                }
+                resultEl.innerHTML = html;
+                showNotification('インポートが完了しました。', 'success');
+                fileInput.value = '';
+                loadSettings();
+            } catch { resultEl.innerHTML = '<span style="color:var(--color-danger);">インポートに失敗しました。</span>'; }
+        }
+
+        // === データ初期化 ===
+        async function resetAllData(mode) {
+            const label = mode === 'slots_only' ? '招待スロットのみ' : 'ゲスト・生徒の全データ';
+            if (!confirm(`${label}を削除します。この操作は取り消せません。本当に実行しますか？`)) return;
+            const input = prompt('確認のため「RESET」と入力してください。');
+            if (input !== 'RESET') { showNotification('確認文字列が一致しません。中止しました。', 'warning'); return; }
+            try {
+                const res = await authFetch(`${API_BASE_URL}/api/admin/data/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirm: 'RESET', mode })
+                });
+                const data = await res.json();
+                showNotification(data.message, res.ok ? 'success' : 'error');
+                if (res.ok) loadSettings();
+            } catch { showNotification('データ初期化に失敗しました。', 'error'); }
+        }
+
+        // === 操作履歴 ===
+        let auditPage = 1;
+        let auditTotal = 0;
+        const AUDIT_PAGE_SIZE = 50;
+        async function loadAuditLogs(page) {
+            if (page < 1) return;
+            const tbody = document.getElementById('audit-tbody');
+            if (!tbody) return;
+            const action = document.getElementById('audit-filter').value;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">読み込み中...</td></tr>';
+            try {
+                const params = new URLSearchParams({ page, pageSize: AUDIT_PAGE_SIZE });
+                if (action) params.set('action', action);
+                const res = await authFetch(`${API_BASE_URL}/api/admin/audit-logs?${params.toString()}`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                auditPage = data.page;
+                auditTotal = data.total;
+                if (!data.logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">記録がありません。</td></tr>';
+                } else {
+                    tbody.innerHTML = data.logs.map(l => `
+                        <tr>
+                            <td style="white-space:nowrap;">${formatDateTime(l.createdAt)}</td>
+                            <td>${escapeHtmlClient(l.actor || '')}</td>
+                            <td>${escapeHtmlClient(l.actor_role || '')}</td>
+                            <td>${escapeHtmlClient(l.action || '')}</td>
+                            <td>${escapeHtmlClient(l.detail || '')}</td>
+                            <td>${escapeHtmlClient(l.ip || '')}</td>
+                        </tr>
+                    `).join('');
+                }
+                const totalPages = Math.max(1, Math.ceil(auditTotal / AUDIT_PAGE_SIZE));
+                document.getElementById('audit-pageinfo').textContent = `${auditPage} / ${totalPages} ページ (全 ${auditTotal} 件)`;
+                document.getElementById('audit-prev').disabled = auditPage <= 1;
+                document.getElementById('audit-next').disabled = auditPage >= totalPages;
+            } catch { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">取得失敗</td></tr>'; }
+        }
+
+        function escapeHtmlClient(str) {
+            return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c]));
         }
 
         async function changePassword() {
@@ -1839,7 +2085,7 @@
                 const res = await authFetch(`${API_BASE_URL}/api/admin/accounts`);
                 if(!res.ok) throw new Error();
                 const data = await res.json();
-                const roleLabels = { 'admin': '👑 管理者', 'reception': '📝 受付担当', 'scanner': '📷 スキャン担当', 'guest': '一般' };
+                const roleLabels = { 'admin': '👑 管理者', 'reception': '📝 受付担当', 'scanner': '📷 スキャン担当', 'developer': '🛠 開発者', 'guest': '一般' };
                 tbody.innerHTML = data.accounts.map(a => `
                     <tr>
                         <td><strong>${a.username}</strong></td>

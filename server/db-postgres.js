@@ -280,14 +280,100 @@ Student.upsertOtp = async function(email, name, otp, otp_expires_at, grade_class
     }
 };
 
+// ====== 運用設定 (キーバリュー) ======
+// システム名・招待枠数・開催日などを管理画面から編集できるようにするための汎用テーブル。
+// 値は常に文字列で保持し、数値/カンマ区切りは呼び出し側で parse する。機微情報は入れない。
+const Config = sequelize.define('Config', {
+    key: {
+        type: DataTypes.STRING,
+        primaryKey: true
+    },
+    value: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    }
+}, { tableName: 'Configs' });
+
+// ====== 監査ログ ======
+// detail には個人情報を入れない規約 (ID・件数・設定値などの非個人情報のみ)。
+const AuditLog = sequelize.define('AuditLog', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    actor: { type: DataTypes.STRING },
+    actor_role: { type: DataTypes.STRING },
+    action: { type: DataTypes.STRING },
+    detail: { type: DataTypes.TEXT },
+    ip: { type: DataTypes.STRING },
+    createdAt: { type: DataTypes.DATE }
+}, {
+    tableName: 'AuditLogs',
+    updatedAt: false,
+    indexes: [
+        { fields: ['action'] },
+        { fields: ['createdAt'] }
+    ]
+});
+
+// ====== 設定の解決 (DB優先 → env → デフォルト) ======
+// Vercel serverless ではインスタンス間でグローバル変数が共有されないため、
+// 永続値は Config テーブルに保存し、各インスタンスは短命キャッシュ + 書込時更新で扱う。
+const CONFIG_DEFAULTS = {
+    guestSlotsPerStudent: process.env.GUEST_SLOTS_PER_STUDENT || '3',
+    systemName: process.env.SYSTEM_NAME || '梨花祭2026',
+    festivalDates: process.env.FESTIVAL_DATES || '2026-07-17,2026-07-18'
+};
+
+let _configCache = null;
+let _configCacheAt = 0;
+const CONFIG_TTL = 30 * 1000; // 30秒で他インスタンスへ自然伝播
+
+async function loadConfigCache() {
+    const rows = await Config.findAll({ raw: true });
+    const map = {};
+    rows.forEach(r => { map[r.key] = r.value; });
+    _configCache = map;
+    _configCacheAt = Date.now();
+    return map;
+}
+
+async function getConfig(key) {
+    if (!_configCache || Date.now() - _configCacheAt > CONFIG_TTL) {
+        try {
+            await loadConfigCache();
+        } catch (e) {
+            // DB読込失敗時はデフォルトにフォールバック (既存挙動を維持)
+            console.error('config cache load error:', e.message);
+            return CONFIG_DEFAULTS[key];
+        }
+    }
+    if (_configCache[key] !== undefined && _configCache[key] !== null) {
+        return _configCache[key];
+    }
+    return CONFIG_DEFAULTS[key];
+}
+
+async function setConfig(key, value) {
+    await Config.upsert({ key, value: String(value) });
+    if (_configCache) _configCache[key] = String(value); // 書込インスタンスは即時反映
+}
+
 module.exports = {
     sequelize,
     User,
     Student,
     GuestSlot,
+    Config,
+    AuditLog,
     Op,
     encrypt,
     decrypt,
     encryptDeterministic,
-    decryptDeterministic
+    decryptDeterministic,
+    CONFIG_DEFAULTS,
+    loadConfigCache,
+    getConfig,
+    setConfig
 };
