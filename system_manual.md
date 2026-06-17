@@ -73,6 +73,8 @@ EMAIL_USER_1=your_email@gmail.com
 EMAIL_PASSWORD_1=your_app_password
 EMAIL_USER_2=your_backup_email@gmail.com
 EMAIL_PASSWORD_2=your_backup_app_password
+EMAIL_USER_3=your_third_email@gmail.com
+EMAIL_PASSWORD_3=your_third_app_password
 FRONTEND_URL=http://localhost:3007
 ```
 *(※Gmailを使う場合は、Googleアカウント設定から「アプリパスワード」を取得して設定してください)*

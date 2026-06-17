@@ -190,6 +190,11 @@ const emailAccounts = {
         pass: process.env.EMAIL_PASSWORD_2,
         active: true
     },
+    account3: {
+        user: process.env.EMAIL_USER_3,
+        pass: process.env.EMAIL_PASSWORD_3,
+        active: true
+    },
     // 必要に応じて追加
 };
 
