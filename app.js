@@ -178,30 +178,20 @@ async function logAudit(req, action, detail = '') {
     }
 }
 
-// メールアカウント設定
-const emailAccounts = {
-    account1: {
-        user: process.env.EMAIL_USER_1,
-        pass: process.env.EMAIL_PASSWORD_1,
-        active: true
-    },
-    account2: {
-        user: process.env.EMAIL_USER_2,
-        pass: process.env.EMAIL_PASSWORD_2,
-        active: true
-    },
-    account3: {
-        user: process.env.EMAIL_USER_3,
-        pass: process.env.EMAIL_PASSWORD_3,
-        active: true
-    },
-    // 必要に応じて追加
-};
+// メールアカウント設定（EMAIL_USER_1..N を自動検出）
+// 環境変数に EMAIL_USER_4 / EMAIL_PASSWORD_4 を足すだけで4つめ以降が有効になる
+const emailAccounts = {};
+const MAX_EMAIL_ACCOUNTS = 10; // 必要なら上限拡張
+for (let i = 1; i <= MAX_EMAIL_ACCOUNTS; i++) {
+    const user = process.env[`EMAIL_USER_${i}`];
+    const pass = process.env[`EMAIL_PASSWORD_${i}`];
+    if (user && pass) {
+        emailAccounts[`account${i}`] = { user, pass, active: true };
+    }
+}
 
 let currentAccountIndex = 0;
-const accountKeys = Object.keys(emailAccounts).filter(key =>
-    emailAccounts[key].user && emailAccounts[key].pass
-);
+const accountKeys = Object.keys(emailAccounts);
 
 function getNextActiveAccount() {
     let attempts = 0;
@@ -233,6 +223,26 @@ function createTransporter(accountKey) {
     });
 }
 
+// 次のアカウントに切り替えるべきエラーか（送信上限・認証・接続エラー）
+function shouldFailover(error) {
+    const code = error && error.code;                 // EAUTH, ECONNECTION, ETIMEDOUT, ESOCKET 等
+    const responseCode = error && error.responseCode; // SMTP数値: 421,450,454,535,550,552 等
+    const msg = (error && error.message) || '';
+    const codes = ['EAUTH', 'ECONNECTION', 'ETIMEDOUT', 'ESOCKET', 'ECONNRESET', 'ECONNREFUSED', 'EDNS'];
+    if (code && codes.includes(code)) return true;
+    if (responseCode && [421, 450, 454, 535, 550, 552].includes(responseCode)) return true;
+    return /quota|rate limit|450|535|550|421/i.test(msg); // 後方互換
+}
+
+// 既知の恒久エラー（上限到達・認証拒否）は24h停止。一時的な接続エラーは停止せず次へ回すだけ
+function isPersistentError(error) {
+    const responseCode = error && error.responseCode;
+    const msg = (error && error.message) || '';
+    if (error && error.code === 'EAUTH') return true;
+    if (responseCode && [421, 450, 535, 550, 552].includes(responseCode)) return true;
+    return /quota|rate limit|450|535|550|421/i.test(msg);
+}
+
 async function sendEmailWithFailover(mailOptions, initialAccountKey = accountKeys[currentAccountIndex]) {
     let currentAccountKey = initialAccountKey;
     let attempts = 0;
@@ -247,26 +257,25 @@ async function sendEmailWithFailover(mailOptions, initialAccountKey = accountKey
             return result;
         } catch (error) {
             console.error(`メール送信エラー (${currentAccountKey}):`, error);
-            if (error.message.includes('quota') ||
-                error.message.includes('rate limit') ||
-                error.message.includes('450') ||
-                error.message.includes('550') ||
-                error.message.includes('421')) {
-
-                console.log(`アカウント${currentAccountKey}の制限に達しました。次のアカウントに切り替えます。`);
-                emailAccounts[currentAccountKey].active = false;
-                setTimeout(() => {
-                    emailAccounts[currentAccountKey].active = true;
-                    console.log(`アカウント${currentAccountKey}を再有効化しました`);
-                }, 24 * 60 * 60 * 1000);
+            if (shouldFailover(error)) {
+                console.log(`アカウント${currentAccountKey}で送信できません。次のアカウントに切り替えます。`);
+                if (isPersistentError(error)) {
+                    // 上限到達・認証拒否などは24時間このアカウントを停止
+                    emailAccounts[currentAccountKey].active = false;
+                    setTimeout(() => {
+                        emailAccounts[currentAccountKey].active = true;
+                        console.log(`アカウント${currentAccountKey}を再有効化しました`);
+                    }, 24 * 60 * 60 * 1000);
+                }
 
                 try {
                     currentAccountKey = getNextActiveAccount();
                     console.log(`次のアカウント${currentAccountKey}に切り替えました`);
                 } catch (e) {
-                    throw new Error('すべてのメールアカウントが制限に達しました。後でもう一度お試しください。');
+                    throw new Error('すべてのメールアカウントが利用できません。後でもう一度お試しください。');
                 }
             } else {
+                // 宛先不正(EENVELOPE)など、アカウントを替えても無意味なエラーはそのまま
                 throw error;
             }
         }
