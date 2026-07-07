@@ -26,7 +26,6 @@
         }
     </script>
     <!-- QRコード生成ライブラリ -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         .tab-bar {
             display: flex;
@@ -311,11 +310,6 @@
                     onclick="logout()">ログアウト</button>
             </div>
 
-            <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.5); padding: 12px; border-radius: var(--radius-md); margin-bottom: 1.5rem; text-align: left;">
-                <p style="font-size: 0.85rem; color: #b45309; margin: 0; font-weight: 600;">💡 最も確実な招待方法</p>
-                <p style="font-size: 0.8rem; color: #b45309; margin: 5px 0 0 0;">当日は電波が混み合い、ゲストがリンクを開けない事故が多発します。<br>「チケット画像を保存」から画像をダウンロードし、<strong style="text-decoration: underline;">LINEの写真として直接ゲストに送る</strong>のが一番確実です。</p>
-            </div>
-
             <p class="subtitle" style="text-align:left; margin-bottom: 0.5rem;">招待リンク管理</p>
             <p id="dash-count-label" class="count-badge"></p>
 
@@ -351,19 +345,6 @@
             </p>
         </div>
 
-    </div>
-
-    <!-- チケット画像モーダル -->
-    <div id="ticket-modal" class="modal-overlay">
-        <div class="modal-container">
-            <button class="modal-close" onclick="closeTicketModal()">&times;</button>
-            <img id="modal-ticket-img" class="modal-image" src="" alt="デジタルチケット">
-            <div class="modal-footer">
-                <p style="color: #333; font-size: 0.85rem; margin: 0;">画像を長押しして保存するか、<br>下のボタンからダウンロードしてください。</p>
-                <a id="modal-download-link" class="btn btn-primary"
-                    style="width: 100%; text-decoration: none; text-align: center;" download="">画像をダウンロード</a>
-            </div>
-        </div>
     </div>
 
     <!-- ゲスト名変更モーダル -->
@@ -682,7 +663,6 @@
                                <button class="btn-copy" id="copy-btn-${i}" onclick="copyLink('${escHtml(url)}', ${i}, '${escHtml(slot.guest_name)}')">📋 コピー</button>
                                <button class="btn-copy btn-line" style="border:none;" onclick="shareLine('${escHtml(url)}', '${escHtml(slot.guest_name)}')">LINE送る</button>
                            </div>
-                           <button class="btn-copy" style="width:100%; margin-top:0.5rem; background: var(--color-bg); color: var(--color-primary); border: 1px dotted var(--color-primary); font-weight: 500;" onclick="downloadTicketImage('${escHtml(url)}', '${escHtml(slot.guest_name)}')">🎟️ チケット画像を保存</button>
                            ${slot.transfer_code
                                ? `<div style="margin-top:0.5rem; background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:0.5rem 0.75rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                                       <span style="font-size:0.78rem; color:#92400e;">譲渡コード：</span>
@@ -878,7 +858,7 @@
         }
 
         function createMessage(url, guestName) {
-            return `梨花祭にご招待します！ ${guestName} 様の入場チケットはこちらです。\n\n【入場用URL】\n${url}\n\n⚠️重要⚠️\n当日は会場の電波が大変混み合います。スムーズに入場するため、必ず【事前に（ご自宅などで）】上記リンクを開き、チケット画像をスマートフォンに保存しておいてください。`;
+            return `梨花祭にご招待します！ ${guestName} 様の入場チケットはこちらです。\n\n【入場用URL】\n${url}\n\n当日は上記リンクを開くと入場用QRコードが表示されます。受付でQRコードをご提示ください。`;
         }
 
         // ===== コピー =====
@@ -909,141 +889,6 @@
             const text = createMessage(url, guestName);
             const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
             window.open(lineUrl, '_blank');
-        }
-
-        // ===== デジタルチケット画像生成 (Canvas) =====
-        async function downloadTicketImage(url, guestName) {
-            showNotification('チケット画像を生成中...', 'info');
-
-            try {
-                // QRコードをデータURLとして生成
-                const qrDataUrl = await QRCode.toDataURL(url, {
-                    width: 300,
-                    margin: 1,
-                    color: { dark: '#111827', light: '#ffffff' }
-                });
-
-                // Canvasの準備 (800x1200 の縦長サイズ)
-                const canvas = document.createElement('canvas');
-                canvas.width = 800;
-                canvas.height = 1200;
-                const ctx = canvas.getContext('2d');
-
-                // 背景グラデーション
-                const gradient = ctx.createLinearGradient(0, 0, 800, 1200);
-                gradient.addColorStop(0, '#4f46e5'); // Indigo
-                gradient.addColorStop(1, '#ec4899'); // Pink
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, 800, 1200);
-
-                // 背景の装飾 (円形)
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-                ctx.beginPath(); ctx.arc(100, 100, 300, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(700, 1000, 400, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(800, 300, 200, 0, Math.PI * 2); ctx.fill();
-
-                // 中央の白いチケットエリア
-                const cardWidth = 660;
-                const cardHeight = 940;
-                const cardX = (800 - cardWidth) / 2;
-                const cardY = (1200 - cardHeight) / 2;
-
-                // 影
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-                ctx.shadowBlur = 30;
-                ctx.shadowOffsetY = 15;
-
-                // 白背景 (角丸対応のため自分で描画するか roundRect 使用)
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                if (ctx.roundRect) {
-                    ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 30);
-                } else {
-                    ctx.rect(cardX, cardY, cardWidth, cardHeight); // fallback
-                }
-                ctx.fill();
-
-                // 影をリセット
-                ctx.shadowColor = 'transparent';
-
-                // 切り取り線（ミシン目）
-                ctx.strokeStyle = '#e5e7eb';
-                ctx.lineWidth = 4;
-                ctx.setLineDash([15, 10]);
-                ctx.beginPath();
-                ctx.moveTo(cardX, cardY + 680);
-                ctx.lineTo(cardX + cardWidth, cardY + 680);
-                ctx.stroke();
-                ctx.setLineDash([]); // リセット
-
-                // --- テキスト描画 ---
-                ctx.textAlign = 'center';
-
-                // ヘッダー: 梨花祭 2026
-                ctx.fillStyle = '#1e1b4b';
-                ctx.font = 'bold 54px "Noto Sans JP", sans-serif';
-                ctx.fillText('梨花祭 2026', 400, cardY + 110);
-
-                // サブタイトル
-                ctx.font = 'bold 28px "Inter", sans-serif';
-                ctx.fillStyle = '#6366f1';
-                ctx.fillText('SPECIAL GUEST TICKET', 400, cardY + 165);
-
-                // ゲスト名
-                ctx.fillStyle = '#111827';
-                ctx.font = 'bold 56px "Noto Sans JP", sans-serif';
-                const displayName = guestName.length > 12 ? guestName.substring(0, 12) + '…' : guestName;
-                ctx.fillText(displayName + ' 様', 400, cardY + 300);
-
-                // --- QRコード描画 ---
-                const qrImg = new Image();
-                qrImg.src = qrDataUrl;
-                await new Promise(resolve => qrImg.onload = resolve);
-
-                const qrSize = 270;
-                const qrX = (800 - qrSize) / 2;
-                const qrY = cardY + 350;
-
-                // QRコードの下に薄い枠線を敷く
-                ctx.strokeStyle = '#f3f4f6';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20);
-                ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-                // --- フッター（インフォメーション） ---
-                ctx.fillStyle = '#4b5563';
-                ctx.font = 'bold 26px "Noto Sans JP", sans-serif';
-                ctx.fillText('当日はこのQRコードをご提示ください', 400, cardY + 740);
-
-                ctx.font = '24px "Noto Sans JP", sans-serif';
-                ctx.fillText('開催日: 2026年7月17日（金）・18日（土）9:00〜14:00', 400, cardY + 810);
-                ctx.fillText('場所: 千葉英和高等学校', 400, cardY + 860);
-
-                // 注意書き
-                ctx.fillStyle = '#9ca3af';
-                ctx.font = '18px "Noto Sans JP", sans-serif';
-                ctx.fillText('※このチケットは1回のみ有効です', 400, cardY + 900);
-
-                // Canvasを画像データへ変換してモーダルに表示
-                const dataUrl = canvas.toDataURL('image/png');
-                const modalImg = document.getElementById('modal-ticket-img');
-                const downloadLink = document.getElementById('modal-download-link');
-                const modal = document.getElementById('ticket-modal');
-
-                modalImg.src = dataUrl;
-                downloadLink.href = dataUrl;
-                downloadLink.download = `梨花祭チケット_${guestName}.png`;
-
-                modal.classList.add('is-active');
-                showNotification('チケット画像を生成しました', 'success');
-            } catch (err) {
-                console.error("画像生成エラー:", err);
-                showNotification('画像の生成に失敗しました', 'error');
-            }
-        }
-
-        function closeTicketModal() {
-            document.getElementById('ticket-modal').classList.remove('is-active');
         }
 
         // Enterキーでゲスト名変更モーダルを確定、Escapeで閉じる
