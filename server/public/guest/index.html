@@ -8,6 +8,32 @@
     <title>梨花祭2026 入場QR</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="manifest" href="/manifest.json">
+    <style>
+        #bright-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #bright-overlay.is-active {
+            display: flex;
+        }
+        #bright-overlay img {
+            width: min(80vw, 360px);
+            height: min(80vw, 360px);
+            max-width: 100%;
+        }
+        #bright-overlay p {
+            margin-top: 24px;
+            color: #333;
+            font-size: 14px;
+        }
+    </style>
     <script>
         // ===
         console.log('%c梨花祭2026 入場管理システム', 'font-size:16px;font-weight:bold;color:#c0392b;');
@@ -65,8 +91,9 @@
         <div id="state-qr" style="display: none;">
             <p class="subtitle">入場用QRコード</p>
             <p id="guest-greeting" style="font-weight: 800; font-size: 1.5rem; margin-bottom: 1rem; color: var(--color-text);"></p>
-            <img id="qr-image" src="" alt="入場用QRコード" style="width: 280px; height: 280px; max-width: 90%; border-radius: var(--radius-md); border: 3px solid var(--color-success);"/>
-            <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-top: 0.5rem;">💡 受付では<strong>画面を明るく</strong>してかざしてください</p>
+            <img id="qr-image" src="" alt="入場用QRコード" style="width: 280px; height: 280px; max-width: 100%; border-radius: var(--radius-md); border: 3px solid var(--color-success);"/>
+            <button class="btn btn-primary" onclick="toggleBrightMode()" style="width: 100%; padding: 10px; font-weight: bold; margin-top: 0.75rem;">🔆 画面を明るくする</button>
+            <p style="font-size: 0.8rem; color: var(--color-text-sub); margin-top: 0.4rem;">受付にかざす前にタップしてください</p>
             <div style="margin-top: 1.5rem; background: var(--color-bg); border-radius: var(--radius-md); padding: 1rem;">
                 <p style="font-size: 0.85rem; color: var(--color-text-sub); margin-bottom: 10px;">当日は回線が混雑し、このページが開けなくなる可能性があります。<br><strong style="color: var(--color-error);">必ず事前にチケット画像を保存（またはスクリーンショット）</strong>して、当日は画像をご提示ください。</p>
                 <button class="btn btn-primary" onclick="downloadTicketImage()" style="width: 100%; padding: 12px; font-weight: bold;">📥 チケット画像を端末に保存</button>
@@ -95,6 +122,11 @@
                 </p>
             </div>
         </div>
+    </div>
+
+    <div id="bright-overlay">
+        <img id="bright-qr-image" src="" alt="入場用QRコード">
+        <p>タップして閉じる</p>
     </div>
 
     <script>
@@ -157,6 +189,16 @@
                 document.getElementById('error-msg').textContent = 'サーバーとの通信に失敗しました。時間をおいて再試行してください。';
             }
         })();
+
+        // ===== 画面を明るくする（全画面白背景でQRを大きく表示）=====
+        function toggleBrightMode() {
+            if (!window.ticketData) return;
+            document.getElementById('bright-qr-image').src = window.ticketData.qrCode;
+            document.getElementById('bright-overlay').classList.add('is-active');
+        }
+        document.getElementById('bright-overlay').addEventListener('click', function () {
+            this.classList.remove('is-active');
+        });
 
         // ===== チケット画像ダウンロード処理 =====
         async function downloadTicketImage() {
