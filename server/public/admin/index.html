@@ -1257,8 +1257,24 @@
         let _lastScannedAt = 0;
         const QR_COOLDOWN_SAME_MS = 3000;   // 同じQRコード: 3秒間は無視
         const QR_COOLDOWN_ANY_MS = 1500;    // 別のQRコードでも: 1.5秒間は無視
-        const SUCCESS_PAUSE_MS = 2000;      // 入場OK後のカメラ一時停止時間（ms）※同一QRは別途3秒クールダウンあり
         let isProcessing = false;           // API処理中フラグ（二重スキャン防止）
+
+        // 処理済みトークンの記憶（同じQRを二度と処理しない）
+        let _processedTokens = new Set();
+
+        // 成功後、QRがカメラの視界から消えるまで再スキャンを無視する
+        let _awaitingFrameClear = false;
+        let _clearFrameCount = 0;
+        const CLEAR_FRAME_THRESHOLD = 5;    // 連続デコード失敗フレーム数（fps:10で約0.5秒）
+
+        function extractToken(decodedText) {
+            try {
+                const url = new URL(decodedText);
+                return url.searchParams.get('token') || url.searchParams.get('id');
+            } catch (e) {
+                return null;
+            }
+        }
 
         function startQrScanner() {
             // iOS等での音声再生制限解除（ユーザーアクション起点で一度再生する）
@@ -1279,9 +1295,12 @@
                 html5QrCodeScanner.stop().catch(err => console.warn("既存のQRスキャナー停止エラー:", err));
             }
 
-            // クールダウンをリセット
+            // クールダウン・重複防止状態をリセット
             _lastScannedText = null;
             _lastScannedAt = 0;
+            _processedTokens = new Set();
+            _awaitingFrameClear = false;
+            _clearFrameCount = 0;
 
             html5QrCodeScanner = new Html5Qrcode("qr-reader");
 
@@ -1289,7 +1308,14 @@
                 { deviceId: { exact: cameraId } },
                 { fps: 10, qrbox: { width: 300, height: 300 } },
                 (decodedText, decodedResult) => {
-                    if (isProcessing) return;
+                    if (isProcessing || _awaitingFrameClear) return;
+
+                    const token = extractToken(decodedText);
+                    if (token && _processedTokens.has(token)) {
+                        // 既に処理済みのQR。サーバーへは問い合わせず無視する
+                        return;
+                    }
+
                     const now = Date.now();
                     const isSame = decodedText === _lastScannedText;
                     const cooldown = isSame ? QR_COOLDOWN_SAME_MS : QR_COOLDOWN_ANY_MS;
@@ -1309,6 +1335,14 @@
                 (errorMessage) => {
                     // エラーメッセージはコンソールにのみ出力し、UIには表示しない (連続スキャン中のノイズを避けるため)
                     // console.warn("QRスキャンエラー:", errorMessage);
+
+                    // 成功後、QRがカメラの視界から消えるまで待つ（フレーム離脱検知）
+                    if (_awaitingFrameClear) {
+                        _clearFrameCount++;
+                        if (_clearFrameCount >= CLEAR_FRAME_THRESHOLD) {
+                            _awaitingFrameClear = false;
+                        }
+                    }
                 }
             ).then(() => {
                 document.getElementById('camera-filter-controls').style.display = '';
@@ -1381,16 +1415,17 @@
                     throw new Error(data.message || 'Unknown error occurred');
                 }
 
+                const dedupeKey = token || reservationId;
+                if (dedupeKey) _processedTokens.add(dedupeKey);
+
                 if (data.message === '入場が承認されました。') {
                     displayReservationDetails(data);
                     const guestName = data.slot && data.slot.guest_name ? data.slot.guest_name : '';
                     showCheckinNotification(guestName ? `✅ ${guestName} さん 入場OK` : '入場完了しました');
                     playSuccessSound();
                     updateReservations();
-                    html5QrCodeScanner.pause(true);
-                    setTimeout(() => {
-                        if (html5QrCodeScanner) html5QrCodeScanner.resume();
-                    }, SUCCESS_PAUSE_MS);
+                    _awaitingFrameClear = true;
+                    _clearFrameCount = 0;
                 } else if (data.message === '既に入場済みです。') {
                     displayReservationDetails(data);
                     const dupName = data.slot && data.slot.guest_name ? data.slot.guest_name : '';
