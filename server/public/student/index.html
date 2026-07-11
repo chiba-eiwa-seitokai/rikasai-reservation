@@ -232,6 +232,9 @@
                     <input class="form-input" type="email" id="login-email" placeholder="例: b2026123@biblos.ac.jp"
                         autocomplete="email">
                     <p class="help" style="font-size:0.78rem; color:var(--color-text-sub); margin-top:0.35rem;">先頭のアルファベット（学年の記号 g/r/b など）を忘れずに入力してください。</p>
+                    <button type="button" onclick="openEmailGuideModal()"
+                        style="background:none;border:none;color:var(--color-primary);text-decoration:underline;font-size:0.78rem;padding:0;margin-top:0.3rem;cursor:pointer;">❓
+                        メールアドレスが分からない方はこちら</button>
                 </div>
                 <p id="login-error" class="help is-danger" style="display:none;"></p>
                 <button class="btn btn-primary" style="width:100%;" onclick="sendLoginOtp()">認証コードを送信</button>
@@ -244,6 +247,9 @@
                     <input class="form-input" type="email" id="reg-email" placeholder="例: b2026123@biblos.ac.jp"
                         autocomplete="email">
                     <p class="help" style="font-size:0.78rem; color:var(--color-text-sub); margin-top:0.35rem;">先頭のアルファベット（学年の記号 g/r/b など）を忘れずに入力してください。番号だけにならないよう注意。</p>
+                    <button type="button" onclick="openEmailGuideModal()"
+                        style="background:none;border:none;color:var(--color-primary);text-decoration:underline;font-size:0.78rem;padding:0;margin-top:0.3rem;cursor:pointer;">❓
+                        メールアドレスが分からない方はこちら</button>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="reg-name">氏名</label>
@@ -360,6 +366,57 @@
         </div>
     </div>
 
+    <!-- 学校メールアドレス案内モーダル -->
+    <div id="email-guide-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="email-guide-modal-title">
+        <div class="modal-container" style="width:400px; max-width:92%; padding:1.5rem; text-align:left;">
+            <h3 id="email-guide-modal-title" style="margin:0 0 1rem; font-size:1.05rem; color:var(--color-text);">学校メールアドレスについて</h3>
+
+            <p style="font-size:0.85rem; font-weight:700; color:var(--color-text-sub); margin-bottom:0.35rem;">正しい形式</p>
+            <p style="font-family:monospace; background:var(--color-bg); border-radius:var(--radius-md); padding:0.5rem 0.75rem; font-size:0.95rem; margin-bottom:0.25rem;">b2026123@biblos.ac.jp</p>
+            <p style="font-size:0.78rem; color:var(--color-text-sub); margin-bottom:1rem;">先頭にアルファベット＋入学年度＋数字＋<code>@biblos.ac.jp</code> が付きます。</p>
+
+            <p style="font-size:0.85rem; font-weight:700; color:var(--color-text-sub); margin-bottom:0.35rem;">学年ごとの先頭部分（2026年度時点）</p>
+            <table style="width:100%; border-collapse:collapse; font-size:0.8rem; color:var(--color-text-sub); margin-bottom:0.5rem;">
+                <tr style="border-bottom:1px solid var(--color-border);">
+                    <th style="text-align:left; padding:0.3rem 0.4rem;">学年</th>
+                    <th style="text-align:left; padding:0.3rem 0.4rem;">入学年度</th>
+                    <th style="text-align:left; padding:0.3rem 0.4rem;">先頭部分</th>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-border);">
+                    <td style="padding:0.3rem 0.4rem;">3年生</td>
+                    <td style="padding:0.3rem 0.4rem;">2024年度入学</td>
+                    <td style="padding:0.3rem 0.4rem; font-family:monospace;">g2024...</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--color-border);">
+                    <td style="padding:0.3rem 0.4rem;">2年生</td>
+                    <td style="padding:0.3rem 0.4rem;">2025年度入学</td>
+                    <td style="padding:0.3rem 0.4rem; font-family:monospace;">r2025...</td>
+                </tr>
+                <tr>
+                    <td style="padding:0.3rem 0.4rem;">1年生</td>
+                    <td style="padding:0.3rem 0.4rem;">2026年度入学</td>
+                    <td style="padding:0.3rem 0.4rem; font-family:monospace;">b2026...</td>
+                </tr>
+            </table>
+            <p style="font-size:0.78rem; color:var(--color-text-sub); margin-bottom:1rem;">先頭のアルファベットと数字は「入学年度」を表すため、進級しても卒業まで変わりません。</p>
+
+            <p style="font-size:0.85rem; font-weight:700; color:var(--color-text-sub); margin-bottom:0.35rem;">よくある間違い</p>
+            <ul style="font-size:0.8rem; color:var(--color-text-sub); margin:0 0 1rem 1.1rem; line-height:1.6;">
+                <li>先頭の英字を忘れて数字だけになっている（例: 2026123@biblos.ac.jp）</li>
+                <li>自分の学年と違う入学年度のアルファベットを使ってしまっている（例: 2年生なのに b2026 を使ってしまう）</li>
+                <li>英字・数字のタイプミス（0とO、1とlの見間違いなど）</li>
+                <li>個人のGmail（@gmail.com）を確認してしまっている ― 認証コードは学校配布のアドレス（@biblos.ac.jp）にのみ届きます</li>
+            </ul>
+
+            <p style="font-size:0.85rem; font-weight:700; color:var(--color-text-sub); margin-bottom:0.35rem;">ログインできない・登録時と違うかもという場合</p>
+            <p style="font-size:0.8rem; color:var(--color-text-sub); margin-bottom:1rem; line-height:1.6;">
+                「このメールアドレスで登録されたアカウントが見つかりません」と表示された場合は、入力したアドレスが登録時と違う可能性があります。上記の形式を確認のうえ、もう一度お試しください。自分の学校メールアドレスが分からない場合は、担任の先生または生徒会にご確認ください。
+            </p>
+
+            <button class="btn btn-primary" style="width:100%;" onclick="closeEmailGuideModal()">閉じる</button>
+        </div>
+    </div>
+
     <script>
         let studentToken = localStorage.getItem('student_token') || '';
         let studentEmail = localStorage.getItem('student_email') || '';
@@ -393,6 +450,22 @@
                 });
             }
         }
+
+        // 学年 → 先頭部分（入学年度＋アルファベット）の対応（2026年度時点。年度が変わったら要更新）
+        const GRADE_ENTRY_PREFIX = { '1': 'b2026', '2': 'r2025', '3': 'g2024' };
+        let lastAutoFilledEmailPrefix = '';
+
+        document.getElementById('reg-grade-class').addEventListener('change', function () {
+            const grade = this.value.split('-')[0];
+            const prefix = GRADE_ENTRY_PREFIX[grade];
+            if (!prefix) return;
+            const emailInput = document.getElementById('reg-email');
+            // 未入力、またはこちらが自動入力した値のままなら上書きしてよい。生徒が手入力した内容は消さない。
+            if (!emailInput.value.trim() || emailInput.value === lastAutoFilledEmailPrefix) {
+                emailInput.value = prefix;
+                lastAutoFilledEmailPrefix = prefix;
+            }
+        });
 
         // ===== タブ切り替え =====
         function switchTab(tab) {
@@ -810,6 +883,14 @@
         function closeEditNameModal() {
             document.getElementById('edit-name-modal').classList.remove('is-active');
             _editNameSlotId = null;
+        }
+
+        function openEmailGuideModal() {
+            document.getElementById('email-guide-modal').classList.add('is-active');
+        }
+
+        function closeEmailGuideModal() {
+            document.getElementById('email-guide-modal').classList.remove('is-active');
         }
 
         async function confirmEditGuestName() {
